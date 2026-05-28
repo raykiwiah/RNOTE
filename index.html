@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BUTCHER — Accounting Agent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#c0392b;--red2:#e74c3c;--blood:#8b0000;
+  --gold:#d4a017;--gold2:#f0c040;
+  --dark:#0a0a0a;--dark2:#111;--dark3:#1a1a1a;--dark4:#222;--dark5:#2a2a2a;
+  --steel:#333;--steel2:#444;
+  --text:#e8e0d0;--text2:#aaa;--text3:#666;
+  --green:#1a7a3a;--green2:#27ae60;
+  --cyan:#0e7a8a;--cyan2:#17a2b8;
+  --font-display:'Bebas Neue',sans-serif;
+  --font-mono:'Share Tech Mono',monospace;
+  --font-body:'Barlow',sans-serif;
+  --font-cond:'Barlow Condensed',sans-serif;
+}
+html,body{height:100%;background:var(--dark);color:var(--text);font-family:var(--font-body)}
+a{color:var(--gold2);text-decoration:none}
+
+/* LAYOUT */
+.app{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.topbar{background:var(--dark2);border-bottom:2px solid var(--blood);padding:0 20px;display:flex;align-items:center;gap:16px;height:56px;flex-shrink:0}
+.logo{font-family:var(--font-display);font-size:32px;letter-spacing:4px;color:var(--red2);line-height:1}
+.logo span{color:var(--gold2)}
+.logo-sub{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:2px;margin-top:-2px}
+.status-badge{display:flex;align-items:center;gap:6px;margin-left:auto}
+.pulse{width:8px;height:8px;background:var(--green2);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.status-text{font-family:var(--font-mono);font-size:10px;color:var(--green2);letter-spacing:2px}
+.version-tag{font-family:var(--font-mono);font-size:9px;color:var(--text3);border:1px solid var(--steel);padding:2px 8px;letter-spacing:1px}
+
+.nav{background:var(--dark3);border-bottom:1px solid var(--steel);display:flex;gap:0;flex-shrink:0}
+.nav-btn{font-family:var(--font-cond);font-size:13px;font-weight:600;letter-spacing:2px;padding:10px 20px;cursor:pointer;border:none;background:transparent;color:var(--text3);border-bottom:2px solid transparent;transition:all .2s;display:flex;align-items:center;gap:8px}
+.nav-btn:hover{color:var(--text);background:var(--dark4)}
+.nav-btn.active{color:var(--red2);border-bottom-color:var(--red2);background:rgba(192,57,43,.08)}
+.nav-btn i{font-size:15px}
+
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.panel{display:none;flex:1;flex-direction:column;overflow:hidden}
+.panel.active{display:flex}
+
+/* CHAT PANEL */
+.chat-wrapper{display:flex;flex:1;overflow:hidden}
+.chat-sidebar{width:220px;background:var(--dark2);border-right:1px solid var(--steel);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-header{padding:12px 16px;border-bottom:1px solid var(--steel);font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:2px}
+.quick-list{flex:1;overflow-y:auto;padding:8px}
+.quick-item{padding:8px 10px;font-size:12px;color:var(--text2);cursor:pointer;border-left:2px solid transparent;margin-bottom:4px;transition:all .15s;line-height:1.4;font-family:var(--font-body)}
+.quick-item:hover{color:var(--text);border-left-color:var(--red);background:rgba(192,57,43,.08)}
+.chat-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;scrollbar-width:thin;scrollbar-color:var(--steel) transparent}
+.msg{display:flex;gap:12px;align-items:flex-start;animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.user{flex-direction:row-reverse}
+.avatar{width:36px;height:36px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:14px;letter-spacing:1px;clip-path:polygon(0 0 ,85% 0,100% 15%,100% 100%,15% 100%,0 85%)}
+.avatar.bot{background:var(--blood);color:var(--gold2)}
+.avatar.usr{background:var(--dark4);border:1px solid var(--steel);color:var(--text3);font-family:var(--font-mono);font-size:10px;clip-path:none;border-radius:2px}
+.bubble{max-width:75%;padding:12px 16px;font-size:13.5px;line-height:1.65;border-radius:2px}
+.msg.bot .bubble{background:var(--dark3);border:1px solid var(--steel);border-left:3px solid var(--red);color:var(--text)}
+.msg.user .bubble{background:#0d1f0d;border:1px solid #1a3a1a;border-right:3px solid var(--green2);color:#ccc}
+.bubble .tag{font-family:var(--font-mono);font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:8px;display:block}
+.bubble strong{color:var(--gold2);font-weight:500}
+.bubble ul{padding-left:18px;margin-top:6px}
+.bubble li{margin-bottom:4px;font-size:13px;color:#bbb}
+.bubble .hl{background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.25);padding:8px 12px;margin-top:10px;border-radius:1px;font-family:var(--font-mono);font-size:11px;color:#ccc;line-height:1.6}
+.bubble code{font-family:var(--font-mono);font-size:11px;color:var(--gold2);background:rgba(212,160,23,.1);padding:1px 5px;border-radius:2px}
+.typing-wrap{display:flex;gap:5px;align-items:center;padding:4px 0}
+.dot{width:6px;height:6px;background:var(--red);border-radius:50%;animation:td 1.2s infinite}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,60%,100%{opacity:.15}30%{opacity:1}}
+.chat-input-wrap{padding:14px 20px;border-top:1px solid var(--steel);display:flex;gap:10px;background:var(--dark2);flex-shrink:0}
+.chat-input{flex:1;background:var(--dark3);border:1px solid var(--steel);border-radius:2px;color:var(--text);font-family:var(--font-body);font-size:14px;padding:10px 14px;outline:none;resize:none;height:44px;transition:border-color .2s}
+.chat-input:focus{border-color:var(--red)}
+.chat-input::placeholder{color:var(--text3);font-size:13px}
+.send-btn{width:44px;height:44px;background:var(--blood);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;clip-path:polygon(0 0,80% 0,100% 20%,100% 100%,20% 100%,0 80%);transition:background .2s;flex-shrink:0}
+.send-btn:hover{background:var(--red)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed}
+.send-btn svg{width:18px;height:18px;fill:white}
+
+/* CALCULATORS PANEL */
+.calc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;padding:20px;overflow-y:auto;flex:1}
+.calc-card{background:var(--dark3);border:1px solid var(--steel);border-top:3px solid var(--blood);padding:18px;border-radius:2px}
+.calc-title{font-family:var(--font-cond);font-size:16px;font-weight:600;letter-spacing:2px;color:var(--gold2);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.calc-title i{font-size:16px;color:var(--red2)}
+.calc-sub{font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:1px;margin-bottom:14px}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:11px;font-family:var(--font-mono);color:var(--text3);letter-spacing:1px;margin-bottom:4px}
+.field input,.field select{width:100%;background:var(--dark4);border:1px solid var(--steel2);color:var(--text);font-family:var(--font-mono);font-size:13px;padding:8px 10px;border-radius:2px;outline:none;transition:border-color .2s}
+.field input:focus,.field select:focus{border-color:var(--red)}
+.field select option{background:var(--dark4)}
+.calc-btn{width:100%;background:var(--blood);border:none;color:var(--gold2);font-family:var(--font-cond);font-size:14px;font-weight:600;letter-spacing:3px;padding:10px;cursor:pointer;border-radius:2px;margin-top:6px;transition:background .2s}
+.calc-btn:hover{background:var(--red)}
+.result-box{margin-top:12px;background:var(--dark4);border:1px solid var(--steel2);border-left:3px solid var(--green2);padding:12px;border-radius:2px;display:none}
+.result-box.show{display:block}
+.result-line{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--steel);font-size:13px}
+.result-line:last-child{border-bottom:none;margin-top:4px;padding-top:8px}
+.result-label{color:var(--text2);font-family:var(--font-mono);font-size:11px}
+.result-value{color:var(--gold2);font-family:var(--font-mono);font-weight:500;font-size:13px}
+.result-total .result-label{color:var(--text);font-size:12px;font-weight:500}
+.result-total .result-value{color:var(--red2);font-size:15px}
+
+/* CALC CREATOR */
+.creator-wrap{display:flex;flex:1;overflow:hidden;gap:0}
+.creator-left{width:340px;background:var(--dark2);border-right:1px solid var(--steel);padding:20px;overflow-y:auto;flex-shrink:0}
+.creator-right{flex:1;padding:20px;overflow-y:auto;background:var(--dark)}
+.section-title{font-family:var(--font-cond);font-size:14px;font-weight:600;letter-spacing:3px;color:var(--red2);margin-bottom:12px;border-bottom:1px solid var(--steel);padding-bottom:8px}
+.form-row{margin-bottom:12px}
+.form-row label{display:block;font-size:11px;font-family:var(--font-mono);color:var(--text3);letter-spacing:1px;margin-bottom:4px}
+.form-row input,.form-row select,.form-row textarea{width:100%;background:var(--dark3);border:1px solid var(--steel);color:var(--text);font-family:var(--font-mono);font-size:12px;padding:8px 10px;border-radius:2px;outline:none}
+.form-row textarea{resize:vertical;min-height:70px;line-height:1.5}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--red)}
+.fields-list{border:1px solid var(--steel);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.field-row{display:flex;gap:8px;padding:8px 10px;border-bottom:1px solid var(--steel);align-items:center;background:var(--dark3)}
+.field-row:last-child{border-bottom:none}
+.field-row input{background:var(--dark4);border:1px solid var(--steel2);color:var(--text);font-size:12px;padding:5px 8px;border-radius:2px;font-family:var(--font-mono)}
+.field-row input:focus{outline:none;border-color:var(--red)}
+.remove-field{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;transition:color .15s}
+.remove-field:hover{color:var(--red2)}
+.add-field-btn{background:var(--dark3);border:1px dashed var(--steel2);color:var(--text3);font-family:var(--font-mono);font-size:11px;padding:8px;width:100%;cursor:pointer;letter-spacing:1px;transition:all .2s;border-radius:2px}
+.add-field-btn:hover{border-color:var(--gold);color:var(--gold2)}
+.generate-btn{width:100%;background:var(--blood);border:none;color:var(--gold2);font-family:var(--font-cond);font-size:15px;font-weight:600;letter-spacing:3px;padding:12px;cursor:pointer;margin-top:8px;border-radius:2px;transition:background .2s}
+.generate-btn:hover{background:var(--red)}
+.preview-area{background:var(--dark3);border:1px solid var(--steel);border-top:3px solid var(--cyan2);padding:20px;border-radius:2px;min-height:200px}
+.preview-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;color:var(--text3);gap:12px}
+.preview-empty i{font-size:40px;color:var(--steel2)}
+.preview-empty p{font-family:var(--font-mono);font-size:11px;letter-spacing:2px}
+
+/* FILE ANALYSIS */
+.file-wrap{display:flex;flex:1;overflow:hidden}
+.file-left{width:320px;background:var(--dark2);border-right:1px solid var(--steel);padding:20px;display:flex;flex-direction:column;gap:16px;flex-shrink:0;overflow-y:auto}
+.file-right{flex:1;padding:20px;overflow-y:auto;background:var(--dark)}
+.drop-zone{border:2px dashed var(--steel2);border-radius:2px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--dark3)}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--red);background:rgba(192,57,43,.06)}
+.drop-zone i{font-size:36px;color:var(--steel2);margin-bottom:10px;display:block}
+.drop-zone.drag i{color:var(--red2)}
+.drop-title{font-family:var(--font-cond);font-size:14px;letter-spacing:2px;color:var(--text2);margin-bottom:4px}
+.drop-sub{font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:1px}
+.file-info{background:var(--dark3);border:1px solid var(--steel);border-left:3px solid var(--green2);padding:12px;border-radius:2px;display:none}
+.file-info.show{display:block}
+.file-name{font-family:var(--font-mono);font-size:12px;color:var(--green2);word-break:break-all}
+.file-meta{font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:4px}
+.analysis-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.atype-btn{background:var(--dark3);border:1px solid var(--steel);padding:10px 8px;cursor:pointer;text-align:center;border-radius:2px;transition:all .15s;font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:1px}
+.atype-btn:hover{border-color:var(--gold);color:var(--gold2)}
+.atype-btn.selected{border-color:var(--red);color:var(--red2);background:rgba(192,57,43,.1)}
+.atype-btn i{display:block;font-size:20px;margin-bottom:6px}
+.analyze-btn{width:100%;background:var(--blood);border:none;color:var(--gold2);font-family:var(--font-cond);font-size:14px;font-weight:600;letter-spacing:3px;padding:11px;cursor:pointer;border-radius:2px;transition:background .2s}
+.analyze-btn:hover{background:var(--red)}
+.analyze-btn:disabled{opacity:.4;cursor:not-allowed}
+.analysis-result{background:var(--dark3);border:1px solid var(--steel);border-top:3px solid var(--blood);padding:20px;border-radius:2px;min-height:300px}
+.result-header{font-family:var(--font-cond);font-size:16px;font-weight:600;letter-spacing:2px;color:var(--gold2);margin-bottom:4px;display:flex;align-items:center;gap:10px}
+.result-header i{color:var(--red2)}
+.result-timestamp{font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-bottom:16px;letter-spacing:1px}
+.result-body{font-size:13.5px;line-height:1.7;color:var(--text)}
+.result-body h3{font-family:var(--font-cond);font-size:14px;letter-spacing:2px;color:var(--red2);margin:14px 0 6px}
+.result-body strong{color:var(--gold2);font-weight:500}
+.result-body ul{padding-left:18px;margin:6px 0}
+.result-body li{margin-bottom:4px;font-size:13px;color:#bbb}
+.result-body code{font-family:var(--font-mono);font-size:11px;color:var(--gold2);background:rgba(212,160,23,.1);padding:1px 5px;border-radius:2px}
+.result-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:280px;color:var(--text3);gap:12px}
+.result-empty i{font-size:48px;color:var(--steel)}
+.result-empty p{font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-align:center}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--steel);border-top-color:var(--red2);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TAX REFERENCE */
+.ref-wrap{flex:1;overflow-y:auto;padding:20px}
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.ref-card{background:var(--dark3);border:1px solid var(--steel);border-top:3px solid var(--blood);padding:16px;border-radius:2px}
+.ref-card-title{font-family:var(--font-cond);font-size:15px;font-weight:600;letter-spacing:2px;color:var(--gold2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.ref-card-title i{color:var(--red2);font-size:16px}
+.ref-table{width:100%;border-collapse:collapse;font-size:12px}
+.ref-table th{font-family:var(--font-mono);font-size:10px;letter-spacing:1px;color:var(--text3);border-bottom:1px solid var(--steel);padding:5px 6px;text-align:left}
+.ref-table td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text2);font-family:var(--font-mono)}
+.ref-table tr:last-child td{border-bottom:none}
+.ref-table td.hl{color:var(--gold2)}
+.ref-table td.red{color:var(--red2)}
+.ref-note{font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--steel);letter-spacing:.5px;line-height:1.6}
+
+/* SCROLLBARS */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--dark)}
+::-webkit-scrollbar-thumb{background:var(--steel);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--red)}
+
+/* UTILITIES */
+.hidden{display:none}
+.loading-msg{font-family:var(--font-mono);font-size:12px;color:var(--text3);padding:12px;letter-spacing:1px}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+</head>
+<body>
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">BUTCHER — AI Accounting Agent for Tanzania, with chat, calculators, file analysis, and tax reference.</h2>
+
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="logo">BUT<span>CHER</span></div>
+      <div class="logo-sub">ACCOUNTING INTELLIGENCE · TANZANIA DIVISION</div>
+    </div>
+    <div class="version-tag">V2.0 · COMPOUND V</div>
+    <div class="status-badge">
+      <div class="pulse"></div>
+      <div class="status-text">OPERATIONAL</div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="nav">
+    <button class="nav-btn active" onclick="showPanel('chat',this)"><i class="ti ti-message-2"></i>CHAT</button>
+    <button class="nav-btn" onclick="showPanel('calc',this)"><i class="ti ti-calculator"></i>CALCULATORS</button>
+    <button class="nav-btn" onclick="showPanel('creator',this)"><i class="ti ti-tools"></i>CALC CREATOR</button>
+    <button class="nav-btn" onclick="showPanel('file',this)"><i class="ti ti-file-analytics"></i>FILE ANALYSIS</button>
+    <button class="nav-btn" onclick="showPanel('ref',this)"><i class="ti ti-book"></i>TZ TAX REF</button>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- CHAT PANEL -->
+    <div class="panel active" id="panel-chat">
+      <div class="chat-wrapper">
+        <div class="chat-sidebar">
+          <div class="sidebar-header">QUICK QUERIES</div>
+          <div class="quick-list" id="quickList">
+            <div class="quick-item" onclick="setQ(this)">Tanzania VAT rules for MFIs</div>
+            <div class="quick-item" onclick="setQ(this)">Calculate PAYE for TZS 850,000 salary</div>
+            <div class="quick-item" onclick="setQ(this)">BOT loan classification criteria</div>
+            <div class="quick-item" onclick="setQ(this)">PAR30 formula and interpretation</div>
+            <div class="quick-item" onclick="setQ(this)">IFRS 9 ECL model for loan impairment</div>
+            <div class="quick-item" onclick="setQ(this)">SDL calculation for 20 employees</div>
+            <div class="quick-item" onclick="setQ(this)">Withholding tax rates Tanzania</div>
+            <div class="quick-item" onclick="setQ(this)">Microfinance Act 2018 tier structure</div>
+            <div class="quick-item" onclick="setQ(this)">Transfer pricing documentation requirements</div>
+            <div class="quick-item" onclick="setQ(this)">Capital adequacy ratio for Tier 2 MFI</div>
+            <div class="quick-item" onclick="setQ(this)">OSS formula and benchmarks</div>
+            <div class="quick-item" onclick="setQ(this)">EFD machine requirements Tanzania</div>
+            <div class="quick-item" onclick="setQ(this)">IAS 7 cash flow statement methods</div>
+            <div class="quick-item" onclick="setQ(this)">NSSF contribution rates 2024</div>
+            <div class="quick-item" onclick="setQ(this)">AML obligations for MFIs in Tanzania</div>
+          </div>
+        </div>
+        <div class="chat-main">
+          <div class="messages" id="messages">
+            <div class="msg bot">
+              <div class="avatar bot">B</div>
+              <div class="bubble">
+                <span class="tag">// BUTCHER ONLINE · COMPOUND V ACTIVATED</span>
+                Oi. I'm <strong>BUTCHER</strong>. No capes, no bollocks — just razor-sharp accounting intelligence built for Tanzania's financial trenches.<br><br>
+                I run on full knowledge of:<br>
+                <ul>
+                  <li><strong>TRA & Tax Law</strong> — VAT, PAYE, SDL, WHT, transfer pricing, EFD</li>
+                  <li><strong>BOT MFI Regulations</strong> — Microfinance Act 2018, prudential guidelines, CAMELS</li>
+                  <li><strong>IFRS Full Suite</strong> — IFRS 9 ECL, IFRS 16, IAS 7, IAS 12 and beyond</li>
+                  <li><strong>MFI Metrics</strong> — PAR, NPL, OSS, FSS, provisioning, liquidity ratios</li>
+                  <li><strong>Audit, Treasury & Forex</strong> — ISA standards, ALM, BOT forex rules</li>
+                </ul>
+                <div class="hl">USE THE TABS ABOVE → Calculators · Build your own calc · Upload files for analysis · Tanzania tax reference tables</div>
+              </div>
+            </div>
+          </div>
+          <div class="chat-input-wrap">
+            <textarea class="chat-input" id="chatInput" placeholder="Ask BUTCHER anything about accounting, Tanzania tax, MFI regulations..." onkeydown="handleChatKey(event)"></textarea>
+            <button class="send-btn" id="sendBtn" onclick="sendChat()" aria-label="Send message">
+              <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALCULATORS PANEL -->
+    <div class="panel" id="panel-calc">
+      <div class="calc-grid">
+
+        <!-- PAYE CALCULATOR -->
+        <div class="calc-card">
+          <div class="calc-title"><i class="ti ti-currency-dollar" aria-hidden="true"></i>PAYE CALCULATOR</div>
+          <div class="calc-sub">TANZANIA INCOME TAX — MONTHLY</div>
+          <div class="field"><label>GROSS MONTHLY SALARY (TZS)</label><input type="number" id="paye-gross" placeholder="e.g. 850000" oninput="calcPAYE()"></div>
+          <div class="field"><label>NSSF DEDUCTION</label><select id="paye-nssf" onchange="calcPAYE()"><option value="yes">Include NSSF (10% employee)</option><option value="no">Exclude NSSF</option></select></div>
+          <div class="result-box" id="paye-result">
+            <div class="result-line"><span class="result-label">GROSS SALARY</span><span class="result-value" id="pr-gross"></span></div>
+            <div class="result-line"><span class="result-label">NSSF (10%)</span><span class="result-value" id="pr-nssf"></span></div>
+            <div class="result-line"><span class="result-label">TAXABLE INCOME</span><span class="result-value" id="pr-taxable"></span></div>
+            <div class="result-line"><span class="result-label">PAYE TAX</span><span class="result-value" id="pr-paye"></span></div>
+            <div class="result-line result-total"><span class="result-label">NET PAY</span><span class="result-value" id="pr-net"></span></div>
+          </div>
+        </div>
+
+        <!-- VAT CALCULATOR -->
+        <div class="calc-card">
+          <div class="calc-title"><i class="ti ti-receipt-tax" aria-hidden="true"></i>VAT CALCULATOR</div>
+          <div class="calc-sub">TANZANIA VAT @ 18%</div>
+          <div class="field"><label>AMOUNT (TZS)</label><input type="number" id="vat-amount" placeholder="e.g. 1000000" oninput="calcVAT()"></div>
+          <div class="field"><label>AMOUNT TYPE</label><select id="vat-type" onchange="calcVAT()"><option value="excl">Exclusive of VAT (add VAT)</option><option value="incl">Inclusive of VAT (extract VAT)</option></select></div>
+          <div class="result-box" id="vat-result">
+            <div class="result-line"><span class="result-label">BASE AMOUNT</span><span class="result-value" id="vr-base"></span></div>
+            <div class="result-line"><span class="result-label">VAT (18%)</span><span class="result-value" id="vr-vat"></span></div>
+            <div class="result-line result-total"><span class="result-label">TOTAL AMOUNT</span><span class="result-value" id="vr-total"></span></div>
+          </div>
+        </div>
+
+        <!-- PAR CALCULATOR -->
+        <div class="calc-card">
+          <div class="calc-title"><i class="ti ti-chart-line" aria-hidden="true"></i>PAR CALCULATOR</div>
+          <div class="calc-sub">PORTFOLIO AT RISK — BOT STANDARD</div>
+          <div class="field"><label>TOTAL LOAN PORTFOLIO (TZS)</label><input type="number" id="par-total" placeholder="e.g. 500000000" oninput="calcPAR()"></div>
+          <div class="field"><label>OVERDUE BALANCE 1+ DAYS (TZS)</label><input type="number" id="par-overdue" placeholder="e.g. 35000000" oninput="calcPAR()"></div>
+          <div class="result-box" id="par-result">
+            <div class="result-line"><span class="result-label">PAR RATIO</span><span class="result-value" id="par-ratio"></span></div>
+            <div class="result-line"><span class="result-label">OVERDUE AMOUNT</span><span class="result-value" id="par-overdue-amt"></span></div>
+            <div class="result-line result-total"><span class="result-label">STATUS</span><span class="result-value" id="par-status"></span></div>
+          </div>
+        </div>
+
+        <!-- LOAN PROVISIONING -->
+        <div class="calc-card">
+          <div class="calc-title"><i class="ti ti-shield-check" aria-hidden="true"></i>LOAN PROVISIONING</div>
+          <div class="calc-sub">BOT PRUDENTIAL GUIDELINES</div>
+          <div class="field"><label>LOAN OUTSTANDING BALANCE (TZS)</label><input type="number" id="prov-bal" placeholder="e.g. 10000000" oninput="calcProv()"></div>
+          <div class="field"><label>LOAN CLASSIFICATION</label>
+            <select id="prov-class" onchange="calcProv()">
+              <option value="0">Performing (0–30 days) — 0%</option>
+              <option value="1">Watch (31–90 days) — 1%</option>
+              <option value="20">Substandard (91–180 days) — 20%</option>
+              <option value="50">Doubtful (181–360 days) — 50%</option>
+              <option value="100">Loss (360+ days) — 100%</option>
+            </select>
+          </div>
+          <div class="field"><label>COLLATERAL VALUE (TZS)</label><input type="number" id="prov-col" placeholder="e.g. 5000000" oninput="calcProv()"></div>
+          <div class="result-box" id="prov-result">
+            <div class="result-line"><span class="result-label">PROVISION RATE</span><span class="result-value" id="pv-rate"></span></div>
+            <div class="result-line"><span class="result-label">GROSS PROVISION</span><span class="result-value" id="pv-gross"></span></div>
+            <div class="result-line"><span class="result-label">NET PROVISION (AFTER COLLATERAL)</span><span class="result-value" id="pv-net"></span></div>
+            <div class="result-line result-total"><span class="result-label">REQUIRED PROVISION</span><span class="result-value" id="pv-req"></span></div>
+          </div>
+        </div>
+
+        <!-- SDL CALCULATOR -->
+        <div class="calc-card">
+          <div class="calc-title"><i class="ti ti-users" aria-hidden="true"></i>SDL CALCULATOR</div>
+          <div class="calc-sub">SKILLS & DEVELOPMENT LEVY — 4.5%</div>
+          <div class="field"><label>TOTAL GROSS PAYROLL (TZS)</label><input type="number" id="sdl-payroll" placeholder="e.g. 15000000" oninput="calcSDL()"></div>
+          <div class="field"><label>NUMBER OF EMPLOYEES</label><input type="number" id="sdl-emp" placeholder="e.g. 25" oninput="calcSDL()"></div>
+          <div class="result-box" id="sdl-result">
+            <div class="result-line"><span class="result-label">SDL RATE</span><span class="result-value">4.5%</span></div>
+            <div class="result-line"><span class="result-label">SDL PAYABLE</span><span class="result-value" id="sdl-amount"></span></div>
+            <div class="result-line"><span class="result-label">ELIGIBLE</span><span class="result-value" id="sdl-eligible"></span></div>
+            <div class="result-line result-total"><span class="result-label">MONTHLY REMITTANCE</span><span class="result-value" id="sdl-monthly"></span></div>
+          </div>
+        </div>
+
+        <!-- OSS CALCULATOR -->
+        <div class="calc-card">
+          <div class="calc-title"><i class="ti ti-report-analytics" aria-hidden="true"></i>OSS CALCULATOR</div>
+          <div class="calc-sub">OPERATIONAL SELF-SUFFICIENCY</div>
+          <div class="field"><label>OPERATING REVENUE (TZS)</label><input type="number" id="oss-rev" placeholder="e.g. 120000000" oninput="calcOSS()"></div>
+          <div class="field"><label>FINANCIAL EXPENSES (TZS)</label><input type="number" id="oss-fin" placeholder="e.g. 25000000" oninput="calcOSS()"></div>
+          <div class="field"><label>LOAN LOSS PROVISIONS (TZS)</label><input type="number" id="oss-llp" placeholder="e.g. 8000000" oninput="calcOSS()"></div>
+          <div class="field"><label>OPERATING EXPENSES (TZS)</label><input type="number" id="oss-opex" placeholder="e.g. 65000000" oninput="calcOSS()"></div>
+          <div class="result-box" id="oss-result">
+            <div class="result-line"><span class="result-label">TOTAL COSTS</span><span class="result-value" id="oss-cost"></span></div>
+            <div class="result-line"><span class="result-label">OSS RATIO</span><span class="result-value" id="oss-ratio"></span></div>
+            <div class="result-line result-total"><span class="result-label">STATUS</span><span class="result-value" id="oss-status"></span></div>
+          </div>
+        </div>
+
+        <!-- WITHHOLDING TAX -->
+        <div class="calc-card">
+          <div class="calc-title"><i class="ti ti-percentage" aria-hidden="true"></i>WITHHOLDING TAX</div>
+          <div class="calc-sub">TRA WITHHOLDING TAX CALCULATOR</div>
+          <div class="field"><label>GROSS PAYMENT AMOUNT (TZS)</label><input type="number" id="wht-amt" placeholder="e.g. 5000000" oninput="calcWHT()"></div>
+          <div class="field"><label>PAYMENT TYPE</label>
+            <select id="wht-type" onchange="calcWHT()">
+              <option value="10r">Dividends — Residents (10%)</option>
+              <option value="10n">Dividends — Non-Residents (10%)</option>
+              <option value="10i">Interest (10%)</option>
+              <option value="5s">Service Fees — Residents (5%)</option>
+              <option value="15s">Service Fees — Non-Residents (15%)</option>
+              <option value="10ren">Rent (10%)</option>
+              <option value="2nat">Natural Resources (2%)</option>
+            </select>
+          </div>
+          <div class="result-box" id="wht-result">
+            <div class="result-line"><span class="result-label">GROSS AMOUNT</span><span class="result-value" id="wt-gross"></span></div>
+            <div class="result-line"><span class="result-label">WHT RATE</span><span class="result-value" id="wt-rate"></span></div>
+            <div class="result-line"><span class="result-label">TAX WITHHELD</span><span class="result-value" id="wt-tax"></span></div>
+            <div class="result-line result-total"><span class="result-label">NET PAYMENT</span><span class="result-value" id="wt-net"></span></div>
+          </div>
+        </div>
+
+        <!-- NSSF CALCULATOR -->
+        <div class="calc-card">
+          <div class="calc-title"><i class="ti ti-heart-handshake" aria-hidden="true"></i>NSSF / PSSSF</div>
+          <div class="calc-sub">SOCIAL SECURITY CONTRIBUTIONS</div>
+          <div class="field"><label>GROSS SALARY (TZS)</label><input type="number" id="nssf-sal" placeholder="e.g. 1200000" oninput="calcNSSF()"></div>
+          <div class="field"><label>FUND TYPE</label>
+            <select id="nssf-type" onchange="calcNSSF()">
+              <option value="nssf">NSSF (Private sector)</option>
+              <option value="psssf">PSSSF (Public sector)</option>
+            </select>
+          </div>
+          <div class="result-box" id="nssf-result">
+            <div class="result-line"><span class="result-label">EMPLOYEE CONTRIBUTION (10%)</span><span class="result-value" id="nssf-emp"></span></div>
+            <div class="result-line"><span class="result-label">EMPLOYER CONTRIBUTION (10%)</span><span class="result-value" id="nssf-er"></span></div>
+            <div class="result-line result-total"><span class="result-label">TOTAL CONTRIBUTION (20%)</span><span class="result-value" id="nssf-total"></span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CALCULATOR CREATOR -->
+    <div class="panel" id="panel-creator">
+      <div class="creator-wrap">
+        <div class="creator-left">
+          <div class="section-title">BUILD YOUR CALCULATOR</div>
+          <div class="form-row"><label>CALCULATOR NAME</label><input type="text" id="cc-name" placeholder="e.g. Loan Interest Calculator"></div>
+          <div class="form-row"><label>DESCRIPTION</label><input type="text" id="cc-desc" placeholder="e.g. Calculate interest on microloans"></div>
+          <div class="form-row"><label>FORMULA / LOGIC (describe in plain English)</label><textarea id="cc-formula" placeholder="e.g. Multiply principal by interest rate divided by 100, then divide by 12 for monthly interest. Add principal to get total repayment."></textarea></div>
+          <div class="section-title" style="margin-top:16px">INPUT FIELDS</div>
+          <div class="fields-list" id="fieldsList">
+            <div class="field-row">
+              <input type="text" placeholder="Field name" value="Principal Amount (TZS)" style="flex:2">
+              <input type="text" placeholder="Type" value="number" style="flex:1">
+              <button class="remove-field" onclick="removeField(this)" aria-label="Remove field">×</button>
+            </div>
+            <div class="field-row">
+              <input type="text" placeholder="Field name" value="Interest Rate (%)" style="flex:2">
+              <input type="text" placeholder="Type" value="number" style="flex:1">
+              <button class="remove-field" onclick="removeField(this)" aria-label="Remove field">×</button>
+            </div>
+          </div>
+          <button class="add-field-btn" onclick="addField()">+ ADD FIELD</button>
+          <div class="form-row" style="margin-top:14px"><label>CURRENCY</label>
+            <select id="cc-currency"><option value="TZS">TZS — Tanzanian Shilling</option><option value="USD">USD — US Dollar</option><option value="EUR">EUR — Euro</option></select>
+          </div>
+          <button class="generate-btn" onclick="generateCalc()">GENERATE CALCULATOR</button>
+        </div>
+        <div class="creator-right">
+          <div class="section-title">PREVIEW</div>
+          <div class="preview-area" id="previewArea">
+            <div class="preview-empty">
+              <i class="ti ti-tools" aria-hidden="true"></i>
+              <p>FILL IN THE FORM AND HIT GENERATE</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILE ANALYSIS -->
+    <div class="panel" id="panel-file">
+      <div class="file-wrap">
+        <div class="file-left">
+          <div class="section-title">UPLOAD DOCUMENT</div>
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+            <i class="ti ti-cloud-upload" aria-hidden="true"></i>
+            <div class="drop-title">DROP FILE HERE</div>
+            <div class="drop-sub">CSV · TXT · PDF (text) · JSON</div>
+          </div>
+          <input type="file" id="fileInput" class="hidden" accept=".csv,.txt,.pdf,.json,.xlsx" onchange="handleFile(event)">
+          <div class="file-info" id="fileInfo">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-meta" id="fileMeta"></div>
+          </div>
+          <div class="section-title" style="margin-top:4px">ANALYSIS TYPE</div>
+          <div class="analysis-type-grid">
+            <div class="atype-btn selected" onclick="selectType(this,'summary')" id="atype-summary"><i class="ti ti-list-details" aria-hidden="true"></i>SUMMARY</div>
+            <div class="atype-btn" onclick="selectType(this,'financial')" id="atype-financial"><i class="ti ti-report-money" aria-hidden="true"></i>FINANCIAL</div>
+            <div class="atype-btn" onclick="selectType(this,'tax')" id="atype-tax"><i class="ti ti-receipt-tax" aria-hidden="true"></i>TAX REVIEW</div>
+            <div class="atype-btn" onclick="selectType(this,'mfi')" id="atype-mfi"><i class="ti ti-building-bank" aria-hidden="true"></i>MFI METRICS</div>
+            <div class="atype-btn" onclick="selectType(this,'compliance')" id="atype-compliance"><i class="ti ti-shield" aria-hidden="true"></i>COMPLIANCE</div>
+            <div class="atype-btn" onclick="selectType(this,'audit')" id="atype-audit"><i class="ti ti-eye" aria-hidden="true"></i>AUDIT PREP</div>
+          </div>
+          <button class="analyze-btn" id="analyzeBtn" onclick="analyzeFile()" disabled>ANALYZE DOCUMENT</button>
+        </div>
+        <div class="file-right">
+          <div class="analysis-result" id="analysisResult">
+            <div class="result-empty" id="resultEmpty">
+              <i class="ti ti-file-analytics" aria-hidden="true"></i>
+              <p>UPLOAD A DOCUMENT<br>AND SELECT ANALYSIS TYPE<br>TO BEGIN</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAX REFERENCE -->
+    <div class="panel" id="panel-ref">
+      <div class="ref-wrap">
+        <div class="ref-grid">
+
+          <div class="ref-card">
+            <div class="ref-card-title"><i class="ti ti-user-dollar" aria-hidden="true"></i>PAYE RATES 2024</div>
+            <table class="ref-table">
+              <tr><th>MONTHLY INCOME (TZS)</th><th>RATE</th></tr>
+              <tr><td>0 — 270,000</td><td class="hl">0%</td></tr>
+              <tr><td>270,001 — 520,000</td><td class="hl">8%</td></tr>
+              <tr><td>520,001 — 760,000</td><td class="hl">20%</td></tr>
+              <tr><td>760,001 — 1,000,000</td><td class="hl">25%</td></tr>
+              <tr><td>Above 1,000,000</td><td class="red">30%</td></tr>
+            </table>
+            <div class="ref-note">Source: Income Tax Act Cap 332. NSSF (10%) deducted before tax calculation.</div>
+          </div>
+
+          <div class="ref-card">
+            <div class="ref-card-title"><i class="ti ti-receipt-tax" aria-hidden="true"></i>WITHHOLDING TAX RATES</div>
+            <table class="ref-table">
+              <tr><th>PAYMENT TYPE</th><th>RESIDENT</th><th>NON-RESIDENT</th></tr>
+              <tr><td>Dividends</td><td class="hl">10%</td><td class="hl">10%</td></tr>
+              <tr><td>Interest</td><td class="hl">10%</td><td class="hl">10%</td></tr>
+              <tr><td>Service Fees</td><td class="hl">5%</td><td class="red">15%</td></tr>
+              <tr><td>Rent</td><td class="hl">10%</td><td class="hl">10%</td></tr>
+              <tr><td>Natural Resources</td><td class="hl">2%</td><td class="hl">2%</td></tr>
+              <tr><td>Insurance Premium</td><td>—</td><td class="red">5%</td></tr>
+            </table>
+            <div class="ref-note">Source: Income Tax Act Cap 332 & TRA guidelines.</div>
+          </div>
+
+          <div class="ref-card">
+            <div class="ref-card-title"><i class="ti ti-building-bank" aria-hidden="true"></i>BOT LOAN CLASSIFICATION</div>
+            <table class="ref-table">
+              <tr><th>CATEGORY</th><th>DAYS PAST DUE</th><th>PROVISION</th></tr>
+              <tr><td>Performing</td><td>0 — 30</td><td class="hl">0%</td></tr>
+              <tr><td>Watch</td><td>31 — 90</td><td class="hl">1%</td></tr>
+              <tr><td>Substandard</td><td>91 — 180</td><td class="hl">20%</td></tr>
+              <tr><td>Doubtful</td><td>181 — 360</td><td class="hl">50%</td></tr>
+              <tr><td>Loss</td><td>360+</td><td class="red">100%</td></tr>
+            </table>
+            <div class="ref-note">Source: BOT Prudential Guidelines — Microfinance Act 2018.</div>
+          </div>
+
+          <div class="ref-card">
+            <div class="ref-card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i>CORPORATE TAX RATES</div>
+            <table class="ref-table">
+              <tr><th>ENTITY TYPE</th><th>RATE</th></tr>
+              <tr><td>Resident companies</td><td class="hl">30%</td></tr>
+              <tr><td>Non-resident companies</td><td class="red">30%</td></tr>
+              <tr><td>Mining companies (special)</td><td class="hl">25–30%</td></tr>
+              <tr><td>Newly listed companies (3yr)</td><td class="hl">25%</td></tr>
+              <tr><td>Agriculture companies</td><td class="hl">20%</td></tr>
+              <tr><td>Presumptive tax (SMEs)</td><td class="hl">Variable</td></tr>
+            </table>
+            <div class="ref-note">Source: Income Tax Act Cap 332.</div>
+          </div>
+
+          <div class="ref-card">
+            <div class="ref-card-title"><i class="ti ti-building" aria-hidden="true"></i>MFI REGULATORY THRESHOLDS</div>
+            <table class="ref-table">
+              <tr><th>METRIC</th><th>MINIMUM / BENCHMARK</th></tr>
+              <tr><td>Capital Adequacy (Tier 2)</td><td class="hl">12%</td></tr>
+              <tr><td>Liquidity Ratio</td><td class="hl">20% demand liabilities</td></tr>
+              <tr><td>Single Borrower Limit</td><td class="hl">25% core capital</td></tr>
+              <tr><td>PAR30 (benchmark)</td><td class="hl">&lt; 5%</td></tr>
+              <tr><td>OSS (target)</td><td class="hl">&gt; 100%</td></tr>
+              <tr><td>NPL Ratio (max)</td><td class="red">&lt; 10%</td></tr>
+            </table>
+            <div class="ref-note">Source: BOT Microfinance Act 2018, Prudential Guidelines.</div>
+          </div>
+
+          <div class="ref-card">
+            <div class="ref-card-title"><i class="ti ti-users" aria-hidden="true"></i>PAYROLL LEVIES SUMMARY</div>
+            <table class="ref-table">
+              <tr><th>LEVY</th><th>EMPLOYEE</th><th>EMPLOYER</th></tr>
+              <tr><td>NSSF/PSSSF</td><td class="hl">10%</td><td class="hl">10%</td></tr>
+              <tr><td>SDL</td><td>—</td><td class="hl">4.5%</td></tr>
+              <tr><td>WCF</td><td>—</td><td class="hl">Varies</td></tr>
+              <tr><td>PAYE</td><td class="hl">0–30%</td><td>—</td></tr>
+            </table>
+            <div class="ref-note">SDL applies to employers with 4+ employees on gross payroll. Source: TRA.</div>
+          </div>
+
+          <div class="ref-card">
+            <div class="ref-card-title"><i class="ti ti-world" aria-hidden="true"></i>VAT QUICK REFERENCE</div>
+            <table class="ref-table">
+              <tr><th>ITEM</th><th>DETAIL</th></tr>
+              <tr><td>Standard rate</td><td class="hl">18%</td></tr>
+              <tr><td>Registration threshold</td><td class="hl">TZS 100M / year</td></tr>
+              <tr><td>Zero-rated supplies</td><td>Exports, agricultural inputs</td></tr>
+              <tr><td>Exempt supplies</td><td>Financial services, medical</td></tr>
+              <tr><td>EFD requirement</td><td class="red">Mandatory (VAT registered)</td></tr>
+              <tr><td>VAT return deadline</td><td class="hl">20th of following month</td></tr>
+            </table>
+            <div class="ref-note">Source: Value Added Tax Act Cap 148.</div>
+          </div>
+
+          <div class="ref-card">
+            <div class="ref-card-title"><i class="ti ti-calendar" aria-hidden="true"></i>KEY TRA FILING DEADLINES</div>
+            <table class="ref-table">
+              <tr><th>OBLIGATION</th><th>DEADLINE</th></tr>
+              <tr><td>PAYE remittance</td><td class="hl">7th following month</td></tr>
+              <tr><td>VAT return & payment</td><td class="hl">20th following month</td></tr>
+              <tr><td>SDL remittance</td><td class="hl">7th following month</td></tr>
+              <tr><td>WHT remittance</td><td class="hl">7th following month</td></tr>
+              <tr><td>Corporate tax return</td><td class="hl">6 months after year-end</td></tr>
+              <tr><td>Provisional tax</td><td class="hl">Quarterly installments</td></tr>
+            </table>
+            <div class="ref-note">Late payment attracts 5% penalty + 2% interest per month. Source: TRA.</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SYSTEM_PROMPT = `You are BUTCHER — an elite AI accounting agent with world-class expertise in all pillars of accounting and finance, with deep specialization in Tanzania's financial regulatory landscape and microfinance institutions (MFIs).
+
+IDENTITY & TONE:
+- Name: BUTCHER
+- Persona: Think Billy Butcher from The Boys — brutal, direct, no-nonsense, occasionally darkly witty, but always devastatingly competent. You cut through financial complexity like a cleaver through bone.
+- Never vague. Always precise. Cite the law, the regulation, the standard.
+- Tone: Authoritative, sharp, occasionally sardonic, always accurate.
+
+DEEP EXPERTISE INCLUDES:
+Tanzania Tax: VAT Act Cap 148 (18%), Income Tax Act Cap 332, PAYE brackets, WHT rates, SDL 4.5%, transfer pricing 2014, EFD, TIN, TRA audit procedures, TRAB/TRAT dispute resolution, EAC customs.
+BOT & MFI: BFIA 2006/2018, Microfinance Act 2018 (Tiers 1-4), loan classification (Performing/Watch/Substandard/Doubtful/Loss), provisioning (0/1/20/50/100%), CAR 12%, liquidity 20%, single borrower 25%, KYC/AML, FIU Tanzania, CRB, CAMELS, PAR, NPL.
+IFRS/IAS: Full suite — IFRS 9 ECL, IFRS 15, 16, 7, 10, 3; IAS 1,2,7,8,10,12,16,19,21,23,24,32,36,37,38,39.
+Managerial: Cost accounting, budgeting, variance analysis, OSS/FSS, ROE/ROA/RAROC, balanced scorecard.
+Audit: ISA full suite, internal audit for MFIs, BOT inspection.
+Treasury: ALM, forex, hedging, liquidity management.
+
+FORMATTING: Use **bold** for key terms, structured sections for complex answers, always cite sources, show formulas with worked TZS examples.`;
+
+let chatHistory = [];
+let fileContent = '';
+let selectedAnalysisType = 'summary';
+let activePanel = 'chat';
+
+function showPanel(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  activePanel = name;
+}
+
+function setQ(el) {
+  document.getElementById('chatInput').value = el.textContent;
+  document.getElementById('chatInput').focus();
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function fmt(n) { return 'TZS ' + Math.round(n).toLocaleString(); }
+function fmtp(n) { return n.toFixed(2) + '%'; }
+
+function addMsg(role, html) {
+  const msgs = document.getElementById('messages');
+  const d = document.createElement('div');
+  d.className = 'msg ' + (role === 'user' ? 'user' : 'bot');
+  const av = document.createElement('div');
+  av.className = 'avatar ' + (role === 'user' ? 'usr' : 'bot');
+  av.textContent = role === 'user' ? 'YOU' : 'B';
+  const bub = document.createElement('div');
+  bub.className = 'bubble';
+  if (role === 'assistant') {
+    bub.innerHTML = '<span class="tag">// BUTCHER INTEL</span>' + formatText(html);
+  } else {
+    bub.textContent = html;
+  }
+  d.appendChild(av); d.appendChild(bub);
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function formatText(t) {
+  return t
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^### (.*?)$/gm, '<h4 style="color:var(--gold2);font-size:12px;letter-spacing:2px;margin:12px 0 5px;font-family:var(--font-cond);font-weight:600">$1</h4>')
+    .replace(/^## (.*?)$/gm, '<h3 style="color:var(--red2);font-size:14px;letter-spacing:2px;margin:14px 0 7px;font-family:var(--font-cond);font-weight:600">$1</h3>')
+    .replace(/^- (.*?)$/gm, '<li style="margin:3px 0;color:#bbb;font-size:13px">$1</li>')
+    .replace(/(<li.*?<\/li>\n?)+/gs, m => `<ul style="padding-left:16px;margin:6px 0">${m}</ul>`)
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+}
+
+function showTyping() {
+  const msgs = document.getElementById('messages');
+  const d = document.createElement('div');
+  d.className = 'msg bot'; d.id = 'typing';
+  d.innerHTML = '<div class="avatar bot">B</div><div class="bubble"><div class="typing-wrap"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
+  msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+}
+
+async function sendChat() {
+  const inp = document.getElementById('chatInput');
+  const msg = inp.value.trim();
+  if (!msg || document.getElementById('sendBtn').disabled) return;
+  inp.value = '';
+  document.getElementById('sendBtn').disabled = true;
+  addMsg('user', msg);
+  chatHistory.push({ role: 'user', content: msg });
+  showTyping();
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, system: SYSTEM_PROMPT, messages: chatHistory })
+    });
+    const data = await res.json();
+    const typing = document.getElementById('typing');
+    if (typing) typing.remove();
+    const reply = data.content && data.content[0] ? data.content[0].text : 'Error — try again.';
+    chatHistory.push({ role: 'assistant', content: reply });
+    addMsg('assistant', reply);
+  } catch (e) {
+    const typing = document.getElementById('typing');
+    if (typing) typing.remove();
+    addMsg('assistant', 'Connection severed. Check your network and try again.');
+  }
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('chatInput').focus();
+}
+
+function calcPAYE() {
+  const gross = parseFloat(document.getElementById('paye-gross').value) || 0;
+  const inclNSSF = document.getElementById('paye-nssf').value === 'yes';
+  if (!gross) { document.getElementById('paye-result').classList.remove('show'); return; }
+  const nssf = inclNSSF ? gross * 0.1 : 0;
+  const taxable = gross - nssf;
+  let paye = 0;
+  if (taxable <= 270000) paye = 0;
+  else if (taxable <= 520000) paye = (taxable - 270000) * 0.08;
+  else if (taxable <= 760000) paye = 20000 + (taxable - 520000) * 0.20;
+  else if (taxable <= 1000000) paye = 68000 + (taxable - 760000) * 0.25;
+  else paye = 128000 + (taxable - 1000000) * 0.30;
+  const net = gross - nssf - paye;
+  document.getElementById('pr-gross').textContent = fmt(gross);
+  document.getElementById('pr-nssf').textContent = fmt(nssf);
+  document.getElementById('pr-taxable').textContent = fmt(taxable);
+  document.getElementById('pr-paye').textContent = fmt(paye);
+  document.getElementById('pr-net').textContent = fmt(net);
+  document.getElementById('paye-result').classList.add('show');
+}
+
+function calcVAT() {
+  const amt = parseFloat(document.getElementById('vat-amount').value) || 0;
+  const type = document.getElementById('vat-type').value;
+  if (!amt) { document.getElementById('vat-result').classList.remove('show'); return; }
+  let base, vat, total;
+  if (type === 'excl') { base = amt; vat = amt * 0.18; total = amt + vat; }
+  else { total = amt; base = amt / 1.18; vat = amt - base; }
+  document.getElementById('vr-base').textContent = fmt(base);
+  document.getElementById('vr-vat').textContent = fmt(vat);
+  document.getElementById('vr-total').textContent = fmt(total);
+  document.getElementById('vat-result').classList.add('show');
+}
+
+function calcPAR() {
+  const total = parseFloat(document.getElementById('par-total').value) || 0;
+  const overdue = parseFloat(document.getElementById('par-overdue').value) || 0;
+  if (!total || !overdue) { document.getElementById('par-result').classList.remove('show'); return; }
+  const par = (overdue / total) * 100;
+  let status = par < 5 ? 'HEALTHY (&lt;5%)' : par < 10 ? 'WATCH ZONE (5–10%)' : 'CRITICAL (&gt;10%)';
+  document.getElementById('par-ratio').textContent = par.toFixed(2) + '%';
+  document.getElementById('par-overdue-amt').textContent = fmt(overdue);
+  document.getElementById('par-status').innerHTML = status;
+  document.getElementById('par-result').classList.add('show');
+}
+
+function calcProv() {
+  const bal = parseFloat(document.getElementById('prov-bal').value) || 0;
+  const rate = parseFloat(document.getElementById('prov-class').value) || 0;
+  const col = parseFloat(document.getElementById('prov-col').value) || 0;
+  if (!bal) { document.getElementById('prov-result').classList.remove('show'); return; }
+  const gross = bal * rate / 100;
+  const netProv = Math.max(0, gross - col);
+  document.getElementById('pv-rate').textContent = rate + '%';
+  document.getElementById('pv-gross').textContent = fmt(gross);
+  document.getElementById('pv-net').textContent = fmt(netProv);
+  document.getElementById('pv-req').textContent = fmt(netProv);
+  document.getElementById('prov-result').classList.add('show');
+}
+
+function calcSDL() {
+  const payroll = parseFloat(document.getElementById('sdl-payroll').value) || 0;
+  const emp = parseInt(document.getElementById('sdl-emp').value) || 0;
+  if (!payroll) { document.getElementById('sdl-result').classList.remove('show'); return; }
+  const eligible = emp >= 4;
+  const sdl = eligible ? payroll * 0.045 : 0;
+  document.getElementById('sdl-amount').textContent = eligible ? fmt(sdl) : 'N/A';
+  document.getElementById('sdl-eligible').textContent = eligible ? 'YES (4+ employees)' : 'NO (fewer than 4)';
+  document.getElementById('sdl-monthly').textContent = eligible ? fmt(sdl) : fmt(0);
+  document.getElementById('sdl-result').classList.add('show');
+}
+
+function calcOSS() {
+  const rev = parseFloat(document.getElementById('oss-rev').value) || 0;
+  const fin = parseFloat(document.getElementById('oss-fin').value) || 0;
+  const llp = parseFloat(document.getElementById('oss-llp').value) || 0;
+  const opex = parseFloat(document.getElementById('oss-opex').value) || 0;
+  if (!rev) { document.getElementById('oss-result').classList.remove('show'); return; }
+  const costs = fin + llp + opex;
+  const oss = costs > 0 ? (rev / costs) * 100 : 0;
+  let status = oss >= 110 ? 'SUSTAINABLE' : oss >= 100 ? 'BREAK-EVEN' : 'BELOW BREAK-EVEN';
+  document.getElementById('oss-cost').textContent = fmt(costs);
+  document.getElementById('oss-ratio').textContent = oss.toFixed(1) + '%';
+  document.getElementById('oss-status').textContent = status;
+  document.getElementById('oss-result').classList.add('show');
+}
+
+function calcWHT() {
+  const amt = parseFloat(document.getElementById('wht-amt').value) || 0;
+  const type = document.getElementById('wht-type').value;
+  if (!amt) { document.getElementById('wht-result').classList.remove('show'); return; }
+  const rates = { '10r':10,'10n':10,'10i':10,'5s':5,'15s':15,'10ren':10,'2nat':2 };
+  const rate = rates[type] || 10;
+  const tax = amt * rate / 100;
+  const net = amt - tax;
+  document.getElementById('wt-gross').textContent = fmt(amt);
+  document.getElementById('wt-rate').textContent = rate + '%';
+  document.getElementById('wt-tax').textContent = fmt(tax);
+  document.getElementById('wt-net').textContent = fmt(net);
+  document.getElementById('wht-result').classList.add('show');
+}
+
+function calcNSSF() {
+  const sal = parseFloat(document.getElementById('nssf-sal').value) || 0;
+  if (!sal) { document.getElementById('nssf-result').classList.remove('show'); return; }
+  const empC = sal * 0.1;
+  const erC = sal * 0.1;
+  document.getElementById('nssf-emp').textContent = fmt(empC);
+  document.getElementById('nssf-er').textContent = fmt(erC);
+  document.getElementById('nssf-total').textContent = fmt(empC + erC);
+  document.getElementById('nssf-result').classList.add('show');
+}
+
+function addField() {
+  const list = document.getElementById('fieldsList');
+  const row = document.createElement('div');
+  row.className = 'field-row';
+  row.innerHTML = '<input type="text" placeholder="Field name" style="flex:2"><input type="text" placeholder="number/text" style="flex:1"><button class="remove-field" onclick="removeField(this)" aria-label="Remove field">×</button>';
+  list.appendChild(row);
+}
+
+function removeField(btn) {
+  const rows = document.querySelectorAll('#fieldsList .field-row');
+  if (rows.length > 1) btn.closest('.field-row').remove();
+}
+
+async function generateCalc() {
+  const name = document.getElementById('cc-name').value.trim();
+  const desc = document.getElementById('cc-desc').value.trim();
+  const formula = document.getElementById('cc-formula').value.trim();
+  const currency = document.getElementById('cc-currency').value;
+  const fieldRows = document.querySelectorAll('#fieldsList .field-row');
+  const fields = Array.from(fieldRows).map(r => {
+    const inputs = r.querySelectorAll('input');
+    return { name: inputs[0].value.trim(), type: inputs[1].value.trim() || 'number' };
+  }).filter(f => f.name);
+
+  if (!name || !formula || fields.length === 0) {
+    alert('Please fill in the calculator name, formula, and at least one field.');
+    return;
+  }
+
+  const preview = document.getElementById('previewArea');
+  preview.innerHTML = '<div class="loading-msg"><span class="spinner"></span>BUTCHER IS BUILDING YOUR CALCULATOR...</div>';
+
+  const prompt = `Build a complete, functional HTML/CSS/JS calculator widget for embedding in a dark-themed accounting dashboard.
+
+Calculator name: "${name}"
+Description: "${desc}"
+Currency: ${currency}
+Formula/Logic: ${formula}
+Input fields: ${fields.map(f => f.name + ' (' + f.type + ')').join(', ')}
+
+Requirements:
+- Dark theme: background #1a1a1a, inputs #222, borders #333, text #e8e0d0, accent color #c0392b (red), results gold #d4a017
+- Font: monospace for values, sans-serif for labels
+- Show all input fields with labels
+- A red "CALCULATE" button
+- A results section that shows each calculation step and the final answer
+- Currency formatted as "${currency} X,XXX,XXX" 
+- All calculations in JavaScript, triggered on button click
+- Clean, professional styling matching an elite accounting tool
+- No external dependencies, pure HTML/CSS/JS only
+- Return ONLY the raw HTML code, nothing else, no markdown fences`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    let html = data.content && data.content[0] ? data.content[0].text : '';
+    html = html.replace(/```html/g, '').replace(/```/g, '').trim();
+    preview.innerHTML = html || '<div class="preview-empty"><i class="ti ti-alert-circle"></i><p>GENERATION FAILED — TRY AGAIN</p></div>';
+  } catch (e) {
+    preview.innerHTML = '<div class="preview-empty"><i class="ti ti-alert-circle" aria-hidden="true"></i><p>ERROR — CHECK CONNECTION</p></div>';
+  }
+}
+
+function dragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag'); }
+function dragLeave() { document.getElementById('dropZone').classList.remove('drag'); }
+function dropFile(e) { e.preventDefault(); dragLeave(); const f = e.dataTransfer.files[0]; if (f) processFile(f); }
+function handleFile(e) { if (e.target.files[0]) processFile(e.target.files[0]); }
+
+function processFile(file) {
+  const info = document.getElementById('fileInfo');
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileMeta').textContent = 'SIZE: ' + (file.size / 1024).toFixed(1) + ' KB · TYPE: ' + (file.type || 'unknown');
+  info.classList.add('show');
+  document.getElementById('analyzeBtn').disabled = false;
+
+  const reader = new FileReader();
+  reader.onload = e => { fileContent = e.target.result; };
+  if (file.type === 'application/pdf') {
+    fileContent = '[PDF FILE: ' + file.name + ' — ' + (file.size/1024).toFixed(1) + ' KB. Analyze based on file name and type.]';
+    reader.readAsDataURL(file);
+  } else {
+    reader.readAsText(file);
+  }
+}
+
+function selectType(el, type) {
+  document.querySelectorAll('.atype-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAnalysisType = type;
+}
+
+async function analyzeFile() {
+  if (!fileContent) return;
+  const btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = 'ANALYZING...';
+
+  const typePrompts = {
+    summary: 'Provide a comprehensive summary of this document. Identify the document type, key data, figures, dates, and parties involved.',
+    financial: 'Perform a detailed financial analysis. Identify revenue, expenses, assets, liabilities, key ratios, trends, and any red flags. Apply IFRS/IAS standards where relevant.',
+    tax: 'Review this document for Tanzania tax compliance. Check VAT treatment, PAYE, withholding tax, SDL, and corporate tax implications under Tanzania Revenue Authority (TRA) rules. Cite Income Tax Act Cap 332 and VAT Act Cap 148.',
+    mfi: 'Analyze this document from a microfinance institution perspective. Extract or assess PAR, NPL, provisioning, OSS/FSS, capital adequacy, and compliance with BOT Microfinance Act 2018 and prudential guidelines.',
+    compliance: 'Review for regulatory compliance in Tanzania. Check against BOT regulations, BFIA, AML/KYC requirements, FIU Tanzania obligations, TRA filing requirements, and NBAA standards.',
+    audit: 'Prepare an audit-focused analysis. Identify risks, control weaknesses, material misstatements, areas requiring scrutiny, and recommendations per ISA standards.'
+  };
+
+  const prompt = `You are BUTCHER — elite Tanzania accounting and MFI specialist. ${typePrompts[selectedAnalysisType]}
+
+Document content:
+${fileContent.substring(0, 3000)}
+
+Provide a structured, detailed analysis. Use headers. Be specific. Cite relevant Tanzania laws, BOT regulations, or IFRS standards. Use **bold** for key findings.`;
+
+  const resultDiv = document.getElementById('analysisResult');
+  resultDiv.innerHTML = '<div class="loading-msg"><span class="spinner"></span>BUTCHER IS CUTTING THROUGH THE DATA...</div>';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await res.json();
+    const reply = data.content && data.content[0] ? data.content[0].text : 'Analysis failed.';
+    const now = new Date().toLocaleString('en-TZ', { timeZone: 'Africa/Dar_es_Salaam' });
+    resultDiv.innerHTML = `
+      <div class="result-header"><i class="ti ti-file-analytics" aria-hidden="true"></i>ANALYSIS COMPLETE</div>
+      <div class="result-timestamp">GENERATED: ${now} · TYPE: ${selectedAnalysisType.toUpperCase()} · ENGINE: BUTCHER v2.0</div>
+      <div class="result-body">${formatText(reply)}</div>`;
+  } catch (e) {
+    resultDiv.innerHTML = '<div class="result-empty"><i class="ti ti-alert-circle" aria-hidden="true"></i><p>ANALYSIS FAILED<br>CHECK CONNECTION</p></div>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'ANALYZE DOCUMENT';
+}
+</script>
+</body>
+</html>
