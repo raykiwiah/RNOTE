@@ -72,6 +72,17 @@ describe('DocumentService · archive & delete cascade', () => {
     await service.deleteDocument(parent);
     expect(repo.size).toBe(0);
   });
+
+  it('lists archived documents and restores a single page', async () => {
+    const parent = await create('Parent');
+    await create('Child', parent);
+    await service.archiveDocument(parent);
+    expect(await service.listArchived(WS)).toHaveLength(2);
+
+    await service.restoreDocument(parent);
+    expect((await service.listArchived(WS)).map((d) => d.title)).toEqual(['Child']);
+    expect(await service.listTree(WS)).toHaveLength(1);
+  });
 });
 
 describe('DocumentService · search', () => {

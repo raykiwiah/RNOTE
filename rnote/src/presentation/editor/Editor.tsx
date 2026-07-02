@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useEditor, EditorContent, type Editor as TiptapEditor } from '@tiptap/react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEditor, EditorContent, BubbleMenu, type Editor as TiptapEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import { AnimatePresence } from 'framer-motion';
+import { Bold, Italic, Strikethrough, Code } from 'lucide-react';
 import type { RichDoc } from '@domain/blocks';
 import { SLASH_COMMANDS, filterCommands, type SlashCommand } from './commands';
 import { SlashMenu } from './SlashMenu';
+import { cn } from '../lib/cn';
 
 interface EditorProps {
   initialContent: RichDoc;
@@ -143,6 +145,30 @@ export function Editor({ initialContent, onChange, editable = true }: EditorProp
 
   return (
     <div className="rn-editor relative">
+      {editor && (
+        <BubbleMenu
+          editor={editor}
+          // zIndex 40 keeps the toolbar above the editor but below the slash
+          // menu (50) and modals/command palette (60) so overlays always win.
+          tippyOptions={{ duration: 120, zIndex: 40 }}
+          shouldShow={({ editor: e, from, to }) => from !== to && e.isFocused && !e.isActive('codeBlock')}
+          className="rn-panel flex items-center gap-0.5 p-1"
+        >
+          <MarkButton label="Bold" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>
+            <Bold size={15} />
+          </MarkButton>
+          <MarkButton label="Italic" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}>
+            <Italic size={15} />
+          </MarkButton>
+          <MarkButton label="Strikethrough" active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}>
+            <Strikethrough size={15} />
+          </MarkButton>
+          <MarkButton label="Inline code" active={editor.isActive('code')} onClick={() => editor.chain().focus().toggleCode().run()}>
+            <Code size={15} />
+          </MarkButton>
+        </BubbleMenu>
+      )}
+
       <EditorContent editor={editor} />
       <AnimatePresence>
         {slash.open && (
@@ -156,5 +182,36 @@ export function Editor({ initialContent, onChange, editable = true }: EditorProp
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+function MarkButton({
+  label,
+  active,
+  onClick,
+  children,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={active}
+      // preventDefault keeps the text selection while the mark is toggled.
+      onMouseDown={(e) => {
+        e.preventDefault();
+        onClick();
+      }}
+      className={cn(
+        'flex h-8 w-8 items-center justify-center rounded-md transition-colors',
+        active ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:bg-surface-hover hover:text-foreground',
+      )}
+    >
+      {children}
+    </button>
   );
 }

@@ -1,9 +1,11 @@
-import { Search, Plus, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useWorkspace } from '../state/workspace';
 import { usePreferences } from '../state/preferences';
 import { DocTreeItem } from './DocTreeItem';
 import { Kbd } from '../components/Kbd';
 import { ThemeModeControls } from '../components/ThemeModeControls';
+import { TrashModal } from '../trash/TrashModal';
 
 interface SidebarProps {
   onOpenSearch: () => void;
@@ -14,6 +16,7 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
   const tree = useWorkspace((s) => s.tree);
   const createDocument = useWorkspace((s) => s.createDocument);
   const mode = usePreferences((s) => s.mode);
+  const [trashOpen, setTrashOpen] = useState(false);
 
   return (
     <aside className="flex h-full w-[264px] shrink-0 flex-col border-r border-border bg-surface">
@@ -62,9 +65,21 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
         )}
       </nav>
 
-      <div className="border-t border-border px-3 py-2.5">
-        <ThemeModeControls />
+      <div className="border-t border-border p-2">
+        <button
+          type="button"
+          onClick={() => setTrashOpen(true)}
+          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface-hover"
+        >
+          <Trash2 size={15} />
+          <span className="flex-1 text-left">Trash</span>
+        </button>
+        <div className="px-1 pt-2">
+          <ThemeModeControls />
+        </div>
       </div>
+
+      <TrashModal open={trashOpen} onClose={() => setTrashOpen(false)} />
     </aside>
   );
 }

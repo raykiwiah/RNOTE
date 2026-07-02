@@ -69,6 +69,15 @@ export class DocumentService {
     return buildTree(summaries);
   }
 
+  /** Archived ("trashed") documents, most recently updated first. */
+  async listArchived(workspaceId: string): Promise<DocumentSummary[]> {
+    const docs = await this.documents.findByWorkspace(wsId(workspaceId), { includeArchived: true });
+    return docs
+      .filter((doc) => doc.isArchived)
+      .map(toSummary)
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+
   async renameDocument(id: string, title: string): Promise<Result<DocumentSummary>> {
     const document = await this.documents.findById(docId(id));
     if (!document) return this.notFound();

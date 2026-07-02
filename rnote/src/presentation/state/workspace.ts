@@ -14,6 +14,7 @@ interface WorkspaceState {
   activeId: string | null;
   activeDoc: DocumentDetail | null;
   saving: boolean;
+  archived: DocumentSummary[];
 
   bootstrap: () => Promise<void>;
   refreshTree: () => Promise<void>;
@@ -25,6 +26,8 @@ interface WorkspaceState {
   archive: (id: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
   move: (id: string, parentId: string | null, position: number) => Promise<void>;
+  restore: (id: string) => Promise<void>;
+  loadArchived: () => Promise<void>;
   toggleExpanded: (id: string) => void;
   search: (query: string) => SearchHit[];
 }
@@ -40,6 +43,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   activeId: null,
   activeDoc: null,
   saving: false,
+  archived: [],
 
   bootstrap: async () => {
     if (get().status !== 'idle') return;
@@ -141,7 +145,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
 
   remove: async (id) => {
     await documents.deleteDocument(id);
-    await get().refreshTree();
+    await Promise.all([get().refreshTree(), get().loadArchived()]);
     if (!nodeExists(get().tree, get().activeId)) {
       const next = get().tree[0];
       if (next) await get().open(next.id);
@@ -152,6 +156,18 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   move: async (id, parentId, position) => {
     const result = await documents.moveDocument(id, parentId, position);
     if (result.ok) await get().refreshTree();
+  },
+
+  restore: async (id) => {
+    await documents.restoreDocument(id);
+    await Promise.all([get().refreshTree(), get().loadArchived()]);
+    await get().open(id);
+  },
+
+  loadArchived: async () => {
+    const { workspaceId } = get();
+    if (!workspaceId) return;
+    set({ archived: await documents.listArchived(workspaceId) });
   },
 
   toggleExpanded: (id) =>
