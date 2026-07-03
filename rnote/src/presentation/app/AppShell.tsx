@@ -7,7 +7,7 @@ import { DocumentEditor } from '../editor/DocumentEditor';
 import { Home } from '../home/Home';
 import { useWorkspace } from '../state/workspace';
 import { useHotkey } from '../hooks/useHotkey';
-import { emit, OPEN_TEMPLATES_EVENT, OPEN_CAPTURE_EVENT } from '../lib/events';
+import { emit, OPEN_TEMPLATES_EVENT, OPEN_CAPTURE_EVENT, OPEN_SEARCH_EVENT } from '../lib/events';
 
 // Loaded on demand.
 const CommandPalette = lazy(() =>
@@ -32,15 +32,18 @@ export function AppShell(): JSX.Element {
   useHotkey('k', () => setPaletteOpen((o) => !o), { meta: true, allowInEditable: true });
   useHotkey('\\', () => setSidebarOpen((o) => !o), { meta: true, allowInEditable: true });
 
-  // Cross-surface open events for the template gallery and quick capture.
+  // Cross-surface open events for the template gallery, quick capture, and search.
   useEffect(() => {
     const openTemplates = (): void => setTemplatesOpen(true);
     const openCapture = (): void => setCaptureOpen(true);
+    const openSearch = (): void => setPaletteOpen(true);
     window.addEventListener(OPEN_TEMPLATES_EVENT, openTemplates);
     window.addEventListener(OPEN_CAPTURE_EVENT, openCapture);
+    window.addEventListener(OPEN_SEARCH_EVENT, openSearch);
     return () => {
       window.removeEventListener(OPEN_TEMPLATES_EVENT, openTemplates);
       window.removeEventListener(OPEN_CAPTURE_EVENT, openCapture);
+      window.removeEventListener(OPEN_SEARCH_EVENT, openSearch);
     };
   }, []);
 

@@ -8,6 +8,7 @@ import {
   Clock,
   LayoutTemplate,
   CalendarDays,
+  Search,
   Check,
   Zap,
 } from 'lucide-react';
@@ -15,7 +16,8 @@ import type { DocumentTreeNode } from '@application/dto';
 import { useWorkspace } from '../state/workspace';
 import { usePreferences } from '../state/preferences';
 import { cn } from '../lib/cn';
-import { emit, OPEN_TEMPLATES_EVENT } from '../lib/events';
+import { emit, OPEN_TEMPLATES_EVENT, OPEN_SEARCH_EVENT } from '../lib/events';
+import { modLabel } from '../lib/platform';
 import { BackupNudge } from './BackupNudge';
 
 /** The "Today" home dashboard — the default landing surface. */
@@ -28,7 +30,7 @@ export function Home(): JSX.Element {
   const mode = usePreferences((s) => s.mode);
 
   const [capture, setCapture] = useState('');
-  const [captured, setCaptured] = useState(false);
+  const [captured, setCaptured] = useState<{ inboxId: string } | null>(null);
 
   const flat = useMemo(() => flatten(tree), [tree]);
   const recent = useMemo(
@@ -40,9 +42,11 @@ export function Home(): JSX.Element {
     const text = capture.trim();
     if (!text) return;
     setCapture('');
-    await quickCapture(text);
-    setCaptured(true);
-    setTimeout(() => setCaptured(false), 1600);
+    const inboxId = await quickCapture(text);
+    if (!inboxId) return;
+    // Stay in flow: confirm quietly instead of yanking the user to a new page.
+    setCaptured({ inboxId });
+    setTimeout(() => setCaptured(null), 4000);
   };
 
   const now = new Date();
@@ -92,13 +96,20 @@ export function Home(): JSX.Element {
           </button>
         </motion.div>
         {captured && (
-          <p className="mt-2 flex items-center gap-1.5 text-xs text-success">
-            <Check size={13} /> Added to your Inbox
+          <p className="mt-2 flex items-center gap-2 px-1 text-sm text-muted-foreground">
+            <Check size={14} className="text-success" /> Saved to 📥 Inbox
+            <button
+              type="button"
+              onClick={() => void open(captured.inboxId)}
+              className="font-medium text-primary hover:underline"
+            >
+              Open
+            </button>
           </p>
         )}
 
         {/* Quick actions */}
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <ActionCard
             icon={<Plus size={18} />}
             title="New page"
@@ -108,7 +119,7 @@ export function Home(): JSX.Element {
           <ActionCard
             icon={<LayoutTemplate size={18} />}
             title="Templates"
-            subtitle={`${flat.length} pages · start from a layout`}
+            subtitle="Start from a layout"
             onClick={() => emit(OPEN_TEMPLATES_EVENT)}
           />
           <ActionCard
@@ -116,6 +127,12 @@ export function Home(): JSX.Element {
             title="Today's note"
             subtitle="Plan and reflect"
             onClick={() => void openToday()}
+          />
+          <ActionCard
+            icon={<Search size={18} />}
+            title="Search"
+            subtitle={`Press ${modLabel('K')}`}
+            onClick={() => emit(OPEN_SEARCH_EVENT)}
           />
         </div>
 

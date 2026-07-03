@@ -30,7 +30,8 @@ interface WorkspaceState {
   showHome: () => void;
   createDocument: (parentId?: string | null) => Promise<string | null>;
   createFromTemplate: (template: PageTemplate) => Promise<void>;
-  quickCapture: (text: string) => Promise<void>;
+  /** Append a thought to the 📥 Inbox (creating it on first use) without navigating; returns its id. */
+  quickCapture: (text: string) => Promise<string | null>;
   openToday: () => Promise<void>;
   rename: (id: string, title: string) => Promise<void>;
   setIcon: (id: string, icon: string) => Promise<void>;
@@ -131,7 +132,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   quickCapture: async (rawText) => {
     const text = rawText.trim();
     const { workspaceId } = get();
-    if (!text || !workspaceId) return;
+    if (!text || !workspaceId) return null;
 
     // Append to a single "Inbox" page (created on first capture) without
     // navigating away — the essence of frictionless capture.
@@ -144,15 +145,16 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
         icon: '📥',
         content: emptyInbox(),
       });
-      if (!created.ok) return;
+      if (!created.ok) return null;
       inboxId = created.value.id;
     }
 
     const detail = await documents.getDocument(inboxId);
-    if (!detail) return;
+    if (!detail) return null;
     await documents.updateContent(inboxId, appendCapture(detail.content, text));
     await get().refreshTree();
     if (get().activeId === inboxId) await get().open(inboxId);
+    return inboxId;
   },
 
   openToday: async () => {

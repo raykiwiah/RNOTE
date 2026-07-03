@@ -178,8 +178,13 @@ export function Editor({ initialContent, onChange, editable = true }: EditorProp
     if (!editor) return;
     const url = linkValue.trim();
     const chain = editor.chain().focus().extendMarkRange('link');
-    if (url === '' || url === 'https://') chain.unsetLink().run();
-    else chain.setLink({ href: url }).run();
+    if (url === '' || url === 'https://') {
+      chain.unsetLink().run();
+    } else {
+      // Normalise bare domains (e.g. "example.com") to a valid absolute URL.
+      const href = /^(https?:\/\/|mailto:|tel:)/i.test(url) ? url : `https://${url}`;
+      chain.setLink({ href }).run();
+    }
     setLinkEditing(false);
   };
   const removeLink = (): void => {

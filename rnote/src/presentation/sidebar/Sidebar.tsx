@@ -6,6 +6,7 @@ import { DocTreeItem } from './DocTreeItem';
 import { Kbd } from '../components/Kbd';
 import { ThemeModeControls } from '../components/ThemeModeControls';
 import { cn } from '../lib/cn';
+import { modLabel } from '../lib/platform';
 
 const TrashModal = lazy(() =>
   import('../trash/TrashModal').then((m) => ({ default: m.TrashModal })),
@@ -69,7 +70,7 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
         >
           <Search size={15} />
           <span className="flex-1 text-left">Search</span>
-          <Kbd>⌘K</Kbd>
+          <Kbd>{modLabel('K')}</Kbd>
         </button>
         <button
           type="button"

@@ -2,6 +2,7 @@ import { Search, PanelLeft } from 'lucide-react';
 import { useWorkspace } from '../state/workspace';
 import { IconButton } from '../components/IconButton';
 import { Kbd } from '../components/Kbd';
+import { modLabel } from '../lib/platform';
 
 interface TopbarProps {
   onOpenSearch: () => void;
@@ -41,7 +42,7 @@ export function Topbar({ onOpenSearch, onToggleSidebar }: TopbarProps): JSX.Elem
       >
         <Search size={13} />
         <span className="hidden sm:inline">Search</span>
-        <Kbd className="hidden sm:inline-flex">⌘K</Kbd>
+        <Kbd className="hidden sm:inline-flex">{modLabel('K')}</Kbd>
       </button>
     </header>
   );
