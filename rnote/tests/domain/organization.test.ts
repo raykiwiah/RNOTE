@@ -6,6 +6,7 @@ import {
   isIntent,
   clampConfidence,
   hashContent,
+  parseOrganization,
 } from '@domain/organization';
 
 describe('heuristic organization', () => {
@@ -92,5 +93,37 @@ describe('organization value object', () => {
     const merged = applyOverrides(base, {});
     expect(merged.categories).toEqual(['Shopping']);
     expect(merged.source).toBe('heuristic');
+  });
+});
+
+describe('parseOrganization (AI response validation)', () => {
+  it('coerces, title-cases, lowercases tags and clamps confidence', () => {
+    const o = parseOrganization(
+      {
+        categories: ['shopping', 'WORK'],
+        projects: ['Patoty Scents'],
+        people: ['Godwin'],
+        tags: ['Perfume', 'ERRAND'],
+        intent: 'task',
+        priority: 'high',
+        dueHint: 'before Friday',
+        confidence: { Shopping: 1.5, Work: 0.2 },
+      },
+      5,
+    );
+    expect(o).not.toBeNull();
+    expect(o?.categories).toEqual(['Shopping', 'Work']);
+    expect(o?.tags).toEqual(['perfume', 'errand']);
+    expect(o?.people).toEqual(['Godwin']);
+    expect(o?.priority).toBe('high');
+    expect(o?.confidence.Shopping).toBe(1);
+    expect(o?.source).toBe('ai');
+    expect(o?.analyzedAt).toBe(5);
+  });
+
+  it('rejects non-objects and falls back on unknown intent', () => {
+    expect(parseOrganization('nope', 0)).toBeNull();
+    expect(parseOrganization(null, 0)).toBeNull();
+    expect(parseOrganization({ intent: 'banana' }, 0)?.intent).toBe('other');
   });
 });

@@ -53,7 +53,8 @@ Provider foundation ✅ (AiProvider port; Anthropic/OpenAI/Gemini/OpenRouter fet
 adapters; Settings with consent, Test connection; off by default; graceful null
 path) · AI assistant ▷ · AI chat with notes ▷ · Auto-organization ◐ (Upgrade 2 · B —
 offline heuristics + VO + Dexie persistence + auto-file-on-save + Smart Collections
-sidebar/views + editable organization bar ✅; AI extraction + corrections ▷) ·
+sidebar/views + editable organization bar ✅; AI extraction pipeline (debounced,
+cancellable, degrades to heuristics) + corrections learning ✅) ·
 Time Machine ▷ (Upgrade 2 · C) · Adaptive AI ▷ · AI companion ▷ ·
 OCR ⛔(needs model) · Voice notes ◐(Web Speech API possible) · Meeting notes ▷ ·
 PDF annotate/summarize ▷ · Document scanner ⛔(camera/native)

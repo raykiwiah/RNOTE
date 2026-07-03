@@ -100,6 +100,36 @@ export function dedupe(list: readonly string[]): string[] {
   return out;
 }
 
+/**
+ * Validate a loosely-parsed model response into a DocumentOrganization, coercing
+ * and clamping every field. Returns null only when the input is not an object.
+ * `source` is marked 'ai' and `contentHash` left blank (the service sets it).
+ */
+export function parseOrganization(input: unknown, now: number): DocumentOrganization | null {
+  if (!input || typeof input !== 'object') return null;
+  const o = input as Record<string, unknown>;
+  const strings = (value: unknown): string[] =>
+    Array.isArray(value)
+      ? value.filter((x): x is string => typeof x === 'string' && x.trim().length > 0).map((x) => x.trim())
+      : [];
+  return {
+    categories: dedupe(strings(o.categories).map(titleCase)).slice(0, 5),
+    projects: dedupe(strings(o.projects)).slice(0, 5),
+    people: dedupe(strings(o.people)).slice(0, 8),
+    places: dedupe(strings(o.places)).slice(0, 5),
+    tags: dedupe(strings(o.tags).map((t) => t.toLowerCase())).slice(0, 8),
+    intent: isIntent(o.intent) ? o.intent : 'other',
+    priority: isPriority(o.priority) ? o.priority : null,
+    dueHint: typeof o.dueHint === 'string' && o.dueHint.trim().length > 0 ? o.dueHint.trim() : null,
+    confidence: clampConfidence(
+      o.confidence && typeof o.confidence === 'object' ? (o.confidence as Record<string, number>) : {},
+    ),
+    source: 'ai',
+    analyzedAt: now,
+    contentHash: '',
+  };
+}
+
 /** Clamp a confidence map into [0,1], dropping non-finite entries. */
 export function clampConfidence(confidence: Record<string, number>): Record<string, number> {
   const out: Record<string, number> = {};
