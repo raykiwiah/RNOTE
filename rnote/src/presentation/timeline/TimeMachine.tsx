@@ -1,12 +1,26 @@
-import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Clock, Search, FilePlus2, Pencil, Zap, Sparkles } from 'lucide-react';
-import { buildChapters, periodStats, type MonthChapter, type TimelineEvent } from '@domain/timeline';
+import { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Clock, Search, FilePlus2, Pencil, Zap, Sparkles, Loader2 } from 'lucide-react';
+import { buildChapters, periodStats, type MonthChapter, type Recap, type TimelineEvent } from '@domain/timeline';
 import type { StoredOrganization } from '@application/ports/OrganizationRepository';
+import { getAiProvider } from '@/composition/container';
+import { makeRecapAnalyzer, makeTimelineAsk } from '@infrastructure/ai/recapAnalyzer';
 import { useTimeline } from '../state/timeline';
 import { useOrganization } from '../state/organization';
 import { useWorkspace } from '../state/workspace';
+import { useAiSettings } from '../state/aiSettings';
+import { recapCacheKey, getCachedRecap, setCachedRecap } from '../lib/recapCache';
 import { Chip } from '../components/Chip';
+
+const MOOD_EMOJI: Record<Recap['mood']['overall'], string> = {
+  happy: '😊',
+  motivated: '💪',
+  stressed: '😬',
+  'burned-out': '🥵',
+  creative: '🎨',
+  focused: '🎯',
+  mixed: '🌤️',
+};
 
 /**
  * The Time Machine — reconstruction, not search. Activity rolls up into month
@@ -16,8 +30,25 @@ export function TimeMachine(): JSX.Element {
   const events = useTimeline((s) => s.events);
   const byId = useOrganization((s) => s.byId);
   const open = useWorkspace((s) => s.open);
+  const aiEnabled = useAiSettings((s) => s.enabled);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<string | null>(null);
+  const [answer, setAnswer] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
+
+  const ask = async (): Promise<void> => {
+    const q = query.trim();
+    if (!q || !aiEnabled) return; // offline: the query already filters below
+    const provider = getAiProvider();
+    if (!provider) return;
+    setAsking(true);
+    setAnswer(null);
+    const digest = buildDigest('all history', events.slice(0, 60), byId);
+    const today = new Date().toISOString().slice(0, 10);
+    const reply = await makeTimelineAsk(provider)(q, digest, today);
+    setAnswer(reply);
+    setAsking(false);
+  };
 
   const filtered = useMemo(() => {
     let list: TimelineEvent[] = events;
@@ -41,15 +72,47 @@ export function TimeMachine(): JSX.Element {
           </div>
         </header>
 
-        <div className="rn-panel mb-5 flex items-center gap-2 p-2 pl-3">
-          <Search size={16} className="shrink-0 text-subtle" />
+        <div className="rn-panel mb-3 flex items-center gap-2 p-2 pl-3">
+          {asking ? (
+            <Loader2 size={16} className="shrink-0 animate-spin text-primary" />
+          ) : (
+            <Search size={16} className="shrink-0 text-subtle" />
+          )}
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask or search your history — e.g. “invoice”, “Godwin”…"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void ask();
+            }}
+            placeholder={
+              aiEnabled
+                ? 'Ask your history — “What was I doing in July?” (Enter)'
+                : 'Search your history — e.g. “invoice”, “Godwin”…'
+            }
             className="h-8 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-subtle"
           />
         </div>
+
+        <AnimatePresence>
+          {answer && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="rn-panel mb-5 flex items-start gap-2 p-3"
+            >
+              <Sparkles size={15} className="mt-0.5 shrink-0 text-primary" />
+              <p className="flex-1 text-sm text-foreground">{answer}</p>
+              <button
+                type="button"
+                onClick={() => setAnswer(null)}
+                className="text-xs text-subtle hover:text-foreground"
+              >
+                Dismiss
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {allProjects.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-1.5">
@@ -95,12 +158,29 @@ function Chapter({
   byId: Record<string, StoredOrganization>;
   onOpen: (id: string) => void;
 }): JSX.Element {
-  const stats = useMemo(
-    () => periodStats(chapter.days.flatMap((d) => d.events)),
-    [chapter],
-  );
+  const aiEnabled = useAiSettings((s) => s.enabled);
+  const chapterEvents = useMemo(() => chapter.days.flatMap((d) => d.events), [chapter]);
+  const stats = useMemo(() => periodStats(chapterEvents), [chapterEvents]);
   const labels = useMemo(() => chapterLabels(chapter, byId), [chapter, byId]);
   const maxPerDay = Math.max(1, ...Object.values(stats.perDay));
+
+  const digest = useMemo(() => buildDigest(chapter.label, chapterEvents, byId), [chapter.label, chapterEvents, byId]);
+  const cacheKey = recapCacheKey(chapter.key, digest);
+  const [recap, setRecap] = useState<Recap | null>(() => getCachedRecap(cacheKey));
+  const [loading, setLoading] = useState(false);
+  useEffect(() => setRecap(getCachedRecap(cacheKey)), [cacheKey]);
+
+  const generate = async (): Promise<void> => {
+    const provider = getAiProvider();
+    if (!provider) return;
+    setLoading(true);
+    const result = await makeRecapAnalyzer(provider)(chapter.label, digest);
+    if (result) {
+      setCachedRecap(cacheKey, result);
+      setRecap(result);
+    }
+    setLoading(false);
+  };
 
   return (
     <motion.section
@@ -141,6 +221,24 @@ function Chapter({
             ))}
           </div>
         )}
+
+        {aiEnabled && (
+          <div className="mt-3 border-t border-border pt-3">
+            {recap ? (
+              <RecapView recap={recap} />
+            ) : (
+              <button
+                type="button"
+                onClick={() => void generate()}
+                disabled={loading}
+                className="flex items-center gap-1.5 text-xs font-medium text-primary transition hover:underline disabled:opacity-50"
+              >
+                {loading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                {loading ? 'Writing your recap…' : 'Generate AI recap'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="space-y-4 border-l border-border pl-4">
@@ -175,6 +273,55 @@ function Chapter({
       </div>
     </motion.section>
   );
+}
+
+function RecapView({ recap }: { recap: Recap }): JSX.Element {
+  const section = (title: string, items: string[]): JSX.Element | null =>
+    items.length === 0 ? null : (
+      <div>
+        <div className="text-[11px] font-semibold uppercase tracking-wide text-subtle">{title}</div>
+        <ul className="mt-0.5 list-inside list-disc text-sm text-muted-foreground">
+          {items.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  return (
+    <div className="space-y-2.5">
+      <div className="flex items-center gap-2 text-sm">
+        <span className="text-base">{MOOD_EMOJI[recap.mood.overall]}</span>
+        <span className="font-medium capitalize text-foreground">{recap.mood.overall}</span>
+        {recap.mood.note && <span className="text-muted-foreground">· {recap.mood.note}</span>}
+      </div>
+      {section('Focused on', recap.focus)}
+      {section('Highlights', recap.highlights)}
+      {section('Open loops', recap.openLoops)}
+    </div>
+  );
+}
+
+function buildDigest(
+  label: string,
+  events: TimelineEvent[],
+  byId: Record<string, StoredOrganization>,
+): string {
+  const stats = periodStats(events);
+  const cat = new Map<string, number>();
+  const ppl = new Map<string, number>();
+  for (const event of events) {
+    const org = byId[event.docId];
+    if (!org) continue;
+    org.categories.forEach((c) => cat.set(c, (cat.get(c) ?? 0) + 1));
+    org.people.forEach((p) => ppl.set(p, (ppl.get(p) ?? 0) + 1));
+  }
+  const top = (m: Map<string, number>): string =>
+    [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([l]) => l).join(', ') || 'none';
+  const lines = events
+    .slice(0, 24)
+    .map((e) => `- ${e.kind} "${e.title}": ${e.snippet}`.slice(0, 140))
+    .join('\n');
+  return `Period: ${label}. Created ${stats.created}, edited ${stats.edited}, captured ${stats.captured} over ${stats.activeDays} active days. Top categories: ${top(cat)}. Top people: ${top(ppl)}.\nEvents:\n${lines}`;
 }
 
 function labelsFor(org: StoredOrganization | undefined): string[] {

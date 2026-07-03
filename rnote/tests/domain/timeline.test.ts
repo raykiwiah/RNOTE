@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { buildChapters, periodStats, type ActivityKind, type TimelineEvent } from '@domain/timeline';
+import {
+  buildChapters,
+  periodStats,
+  parseRecap,
+  type ActivityKind,
+  type TimelineEvent,
+} from '@domain/timeline';
 
 const ev = (at: number, kind: ActivityKind, docId = 'd'): TimelineEvent => ({
   at,
@@ -36,5 +42,26 @@ describe('periodStats', () => {
     expect(s.total).toBe(3);
     expect(s.activeDays).toBe(2);
     expect(s.busiestDay).toBe('2026-07-03');
+  });
+});
+
+describe('parseRecap', () => {
+  it('parses a valid recap', () => {
+    const r = parseRecap({
+      focus: ['shipping RNOTE'],
+      mood: { overall: 'motivated', note: 'busy but upbeat' },
+      highlights: ['launched Phase B'],
+      people: ['Godwin'],
+      openLoops: ['pay invoice'],
+    });
+    expect(r?.mood.overall).toBe('motivated');
+    expect(r?.focus).toEqual(['shipping RNOTE']);
+    expect(r?.openLoops).toEqual(['pay invoice']);
+  });
+
+  it('defaults unknown mood to mixed and rejects empty/non-objects', () => {
+    expect(parseRecap({ focus: ['x'], mood: { overall: 'banana' } })?.mood.overall).toBe('mixed');
+    expect(parseRecap({})).toBeNull();
+    expect(parseRecap('nope')).toBeNull();
   });
 });
