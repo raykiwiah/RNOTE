@@ -14,6 +14,7 @@ export function Topbar({ onOpenSearch, onToggleSidebar }: TopbarProps): JSX.Elem
   const workspaceName = useWorkspace((s) => s.workspaceName);
   const activeDoc = useWorkspace((s) => s.activeDoc);
   const view = useWorkspace((s) => s.view);
+  const activeCollection = useWorkspace((s) => s.activeCollection);
   const reading = useViewMode((s) => s.reading);
   const toggleFocus = useViewMode((s) => s.toggleFocus);
   const toggleReading = useViewMode((s) => s.toggleReading);
@@ -29,6 +30,8 @@ export function Topbar({ onOpenSearch, onToggleSidebar }: TopbarProps): JSX.Elem
         <span className="text-subtle">/</span>
         {view === 'home' ? (
           <span className="font-medium text-foreground">Home</span>
+        ) : view === 'collection' ? (
+          <span className="font-medium text-foreground">{activeCollection?.label ?? 'Collection'}</span>
         ) : activeDoc ? (
           <span className="flex min-w-0 items-center gap-1.5 text-foreground">
             {activeDoc.icon && <span className="shrink-0">{activeDoc.icon}</span>}

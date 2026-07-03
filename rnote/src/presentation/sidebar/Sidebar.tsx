@@ -3,6 +3,7 @@ import { Search, Plus, Sparkles, Trash2, Home as HomeIcon, CalendarDays, Setting
 import { useWorkspace } from '../state/workspace';
 import { usePreferences } from '../state/preferences';
 import { DocTreeItem } from './DocTreeItem';
+import { SmartCollections } from './SmartCollections';
 import { Kbd } from '../components/Kbd';
 import { ThemeModeControls } from '../components/ThemeModeControls';
 import { cn } from '../lib/cn';
@@ -83,17 +84,20 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
         </button>
       </div>
 
-      <div className="mt-1 px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-subtle">
-        Private
-      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto pb-4">
+        <SmartCollections />
 
-      <nav aria-label="Pages" className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
-        {tree.length === 0 ? (
-          <p className="px-2 py-3 text-xs text-subtle">No pages yet.</p>
-        ) : (
-          tree.map((node) => <DocTreeItem key={node.id} node={node} depth={0} />)
-        )}
-      </nav>
+        <div className="mt-1 px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-subtle">
+          Private
+        </div>
+        <nav aria-label="Pages" className="px-2">
+          {tree.length === 0 ? (
+            <p className="px-2 py-3 text-xs text-subtle">No pages yet.</p>
+          ) : (
+            tree.map((node) => <DocTreeItem key={node.id} node={node} depth={0} />)
+          )}
+        </nav>
+      </div>
 
       <div className="border-t border-border p-2">
         <button

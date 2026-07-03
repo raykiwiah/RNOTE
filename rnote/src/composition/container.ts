@@ -1,11 +1,13 @@
 import { DocumentService } from '@application/documents/DocumentService';
 import { WorkspaceService } from '@application/workspace/WorkspaceService';
+import { OrganizationService } from '@application/organization/OrganizationService';
 import type { SearchIndexPort } from '@application/ports/SearchIndex';
 import type { DocumentRepository } from '@application/ports/DocumentRepository';
 import type { WorkspaceRepository } from '@application/ports/WorkspaceRepository';
 import { getDatabase } from '@infrastructure/persistence/dexie/database';
 import { DexieDocumentRepository } from '@infrastructure/persistence/dexie/DexieDocumentRepository';
 import { DexieWorkspaceRepository } from '@infrastructure/persistence/dexie/DexieWorkspaceRepository';
+import { DexieOrganizationRepository } from '@infrastructure/persistence/dexie/DexieOrganizationRepository';
 import { TauriSqliteDocumentRepository } from '@infrastructure/persistence/sqlite/TauriSqliteDocumentRepository';
 import { TauriSqliteWorkspaceRepository } from '@infrastructure/persistence/sqlite/TauriSqliteWorkspaceRepository';
 import { FlexSearchIndex } from '@infrastructure/search/FlexSearchIndex';
@@ -24,6 +26,7 @@ import { createAiProvider } from '@infrastructure/ai/createAiProvider';
 export interface Container {
   documents: DocumentService;
   workspaces: WorkspaceService;
+  organization: OrganizationService;
   search: SearchIndexPort;
 }
 
@@ -45,9 +48,15 @@ export function createContainer(): Container {
     workspaceRepository = new DexieWorkspaceRepository(db);
   }
 
+  // Organization metadata always lives in IndexedDB (its own table), even on the
+  // Tauri shell — documents may be in SQLite, but collections are a browser-side
+  // query concern and this keeps the desktop path working without a SQLite port.
+  const organizationRepository = new DexieOrganizationRepository(getDatabase());
+
   return {
     documents: new DocumentService(documentRepository, search, clock),
     workspaces: new WorkspaceService(workspaceRepository, clock),
+    organization: new OrganizationService(organizationRepository),
     search,
   };
 }

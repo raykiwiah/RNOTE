@@ -116,12 +116,13 @@ export function clampConfidence(confidence: Record<string, number>): Record<stri
  * or removed. User intent always wins: pinned labels are force-included, removed
  * labels are force-excluded, and the source is marked accordingly.
  */
-export interface UserOverrides {
-  pinned?: Partial<Record<'categories' | 'projects' | 'people' | 'places' | 'tags', string[]>>;
-  removed?: Partial<Record<'categories' | 'projects' | 'people' | 'places' | 'tags', string[]>>;
-}
+export const LABEL_FIELDS = ['categories', 'projects', 'people', 'places', 'tags'] as const;
+export type LabelField = (typeof LABEL_FIELDS)[number];
 
-const LABEL_FIELDS = ['categories', 'projects', 'people', 'places', 'tags'] as const;
+export interface UserOverrides {
+  pinned?: Partial<Record<LabelField, string[]>>;
+  removed?: Partial<Record<LabelField, string[]>>;
+}
 
 export function applyOverrides(
   organization: DocumentOrganization,

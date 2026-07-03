@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { DocumentRecord, WorkspaceRecord } from './records';
+import type { DocumentRecord, WorkspaceRecord, OrganizationRecord } from './records';
 
 /**
  * The local-first store. IndexedDB via Dexie is the Milestone 1 storage engine;
@@ -13,12 +13,20 @@ import type { DocumentRecord, WorkspaceRecord } from './records';
 export class RnoteDatabase extends Dexie {
   documents!: Table<DocumentRecord, string>;
   workspaces!: Table<WorkspaceRecord, string>;
+  organizations!: Table<OrganizationRecord, string>;
 
   constructor(name = 'rnote') {
     super(name);
     this.version(1).stores({
       documents: 'id, workspaceId, updatedAt, [workspaceId+parentId], [workspaceId+isArchived]',
       workspaces: 'id, createdAt',
+    });
+    // v2 — auto-organization. New table only; existing documents are untouched
+    // and get an organization record lazily on first analysis (no data migration
+    // needed). MultiEntry (*) indexes power Smart Collection queries.
+    this.version(2).stores({
+      organizations:
+        'docId, workspaceId, intent, contentHash, *categories, *projects, *people, *places, *tags',
     });
   }
 }

@@ -5,6 +5,7 @@ import { Sidebar } from '../sidebar/Sidebar';
 import { Topbar } from '../topbar/Topbar';
 import { DocumentEditor } from '../editor/DocumentEditor';
 import { Home } from '../home/Home';
+import { CollectionView } from '../collection/CollectionView';
 import { Celebration } from '../gamification/Celebration';
 import { useWorkspace } from '../state/workspace';
 import { useViewMode } from '../state/viewMode';
@@ -41,6 +42,7 @@ export function AppShell(): JSX.Element {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const view = useWorkspace((s) => s.view);
   const activeId = useWorkspace((s) => s.activeId);
+  const activeCollection = useWorkspace((s) => s.activeCollection);
   const focus = useViewMode((s) => s.focus);
   const reading = useViewMode((s) => s.reading);
   const toggleFocus = useViewMode((s) => s.toggleFocus);
@@ -120,7 +122,15 @@ export function AppShell(): JSX.Element {
             onToggleSidebar={() => setSidebarOpen((o) => !o)}
           />
         )}
-        <main className="min-h-0 flex-1">{view === 'home' ? <Home /> : <DocumentEditor />}</main>
+        <main className="min-h-0 flex-1">
+          {view === 'home' ? (
+            <Home />
+          ) : view === 'collection' ? (
+            <CollectionView key={`${activeCollection?.kind}:${activeCollection?.label}`} />
+          ) : (
+            <DocumentEditor />
+          )}
+        </main>
       </div>
 
       {/* Immersive-mode controls: a calm, always-reachable exit + reading toggle. */}

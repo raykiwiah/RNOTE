@@ -5,6 +5,8 @@ import type { WorkspaceBackup } from '@application/documents/backup';
 import type { SearchHit } from '@application/ports/SearchIndex';
 import { container } from '@/composition/container';
 import { useGameStats } from './gameStats';
+import { useOrganization } from './organization';
+import type { CollectionKind } from '../lib/collections';
 import { WELCOME_DOC } from './welcome';
 import {
   TEMPLATES,
@@ -23,12 +25,14 @@ interface WorkspaceState {
   activeDoc: DocumentDetail | null;
   saving: boolean;
   archived: DocumentSummary[];
-  view: 'home' | 'document';
+  view: 'home' | 'document' | 'collection';
+  activeCollection: { kind: CollectionKind; label: string } | null;
 
   bootstrap: () => Promise<void>;
   refreshTree: () => Promise<void>;
   open: (id: string) => Promise<void>;
   showHome: () => void;
+  openCollection: (kind: CollectionKind, label: string) => void;
   createDocument: (parentId?: string | null) => Promise<string | null>;
   createFromTemplate: (template: PageTemplate) => Promise<void>;
   /** Append a thought to the 📥 Inbox (creating it on first use) without navigating; returns its id. */
@@ -61,6 +65,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   saving: false,
   archived: [],
   view: 'home',
+  activeCollection: null,
 
   bootstrap: async () => {
     if (get().status !== 'idle') return;
@@ -90,6 +95,14 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
 
     // Count today's visit toward the daily streak.
     useGameStats.getState().checkIn();
+
+    // Load cached organization, then backfill any not-yet-analyzed docs so
+    // Smart Collections populate immediately (offline heuristics, in background).
+    const orgStore = useOrganization.getState();
+    void orgStore.loadAll(workspace.id).then(() => {
+      const flat = flattenTree(get().tree).map((n) => ({ id: n.id, title: n.title }));
+      void orgStore.backfill(workspace.id, flat);
+    });
   },
 
   refreshTree: async () => {
@@ -109,6 +122,8 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
   },
 
   showHome: () => set({ view: 'home' }),
+
+  openCollection: (kind, label) => set({ view: 'collection', activeCollection: { kind, label } }),
 
   createDocument: async (parentId = null) => {
     const { workspaceId } = get();
@@ -133,6 +148,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
     await get().refreshTree();
     await get().open(created.value.id);
     useGameStats.getState().recordAction('template');
+    void useOrganization.getState().analyzeDoc({ docId: created.value.id, workspaceId, title, content });
   },
 
   quickCapture: async (rawText) => {
@@ -157,10 +173,12 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
 
     const detail = await documents.getDocument(inboxId);
     if (!detail) return null;
-    await documents.updateContent(inboxId, appendCapture(detail.content, text));
+    const updated = appendCapture(detail.content, text);
+    await documents.updateContent(inboxId, updated);
     await get().refreshTree();
     if (get().activeId === inboxId) await get().open(inboxId);
     useGameStats.getState().recordAction('capture');
+    void useOrganization.getState().analyzeDoc({ docId: inboxId, workspaceId, title: 'Inbox', content: updated });
     return inboxId;
   },
 
@@ -207,6 +225,13 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
       set((state) => ({ tree: patchTree(state.tree, id, { preview: summary.preview }) }));
     }
     set({ saving: false });
+
+    // Re-derive organization from the new content (skips if the hash is unchanged).
+    const { workspaceId, activeDoc } = get();
+    if (workspaceId) {
+      const title = activeDoc?.id === id ? activeDoc.title : '';
+      void useOrganization.getState().analyzeDoc({ docId: id, workspaceId, title, content });
+    }
   },
 
   archive: async (id) => {
@@ -221,6 +246,7 @@ export const useWorkspace = create<WorkspaceState>((set, get) => ({
 
   remove: async (id) => {
     await documents.deleteDocument(id);
+    useOrganization.getState().forget(id);
     await Promise.all([get().refreshTree(), get().loadArchived()]);
     if (!nodeExists(get().tree, get().activeId)) {
       const next = get().tree[0];
@@ -306,6 +332,18 @@ function appendCapture(doc: RichDoc, text: string): RichDoc {
 }
 
 // ── Tree helpers (pure) ──────────────────────────────────────────────────────
+function flattenTree(tree: DocumentTreeNode[]): DocumentTreeNode[] {
+  const out: DocumentTreeNode[] = [];
+  const walk = (nodes: DocumentTreeNode[]): void => {
+    for (const node of nodes) {
+      out.push(node);
+      walk(node.children);
+    }
+  };
+  walk(tree);
+  return out;
+}
+
 function patchTree(
   tree: DocumentTreeNode[],
   id: string,

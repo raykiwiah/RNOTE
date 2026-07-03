@@ -9,6 +9,7 @@ import { useDebouncedCallback } from '../hooks/useDebouncedCallback';
 import { cn } from '../lib/cn';
 import { Editor } from './Editor';
 import { IconPicker } from './IconPicker';
+import { OrganizationBar } from './OrganizationBar';
 
 /** Content pane. Resolves the active document and renders it, or an empty state. */
 export function DocumentEditor(): JSX.Element {
@@ -75,6 +76,8 @@ function DocumentEditorInner({ doc }: { doc: DocumentDetail }): JSX.Element {
           aria-label="Page title"
           className="rn-page-title mt-2 w-full resize-none border-none bg-transparent font-display text-[2.4rem] font-bold leading-tight tracking-tight text-foreground outline-none placeholder:text-subtle"
         />
+
+        {!reading && <OrganizationBar docId={doc.id} />}
 
         <div className="mt-2">
           <Editor initialContent={doc.content} onChange={handleContentChange} editable={!reading} />
