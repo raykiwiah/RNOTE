@@ -72,7 +72,7 @@ export function TimeMachine(): JSX.Element {
           </div>
         </header>
 
-        <div className="rn-panel mb-3 flex items-center gap-2 p-2 pl-3">
+        <div className="rn-field rn-panel mb-3 flex items-center gap-2 p-2 pl-3">
           {asking ? (
             <Loader2 size={16} className="shrink-0 animate-spin text-primary" />
           ) : (

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, MotionConfig } from 'framer-motion';
 import { Zap, Minimize2, BookOpen } from 'lucide-react';
 import { Sidebar } from '../sidebar/Sidebar';
 import { Topbar } from '../topbar/Topbar';
@@ -89,6 +89,7 @@ export function AppShell(): JSX.Element {
   }, [activeId, view]);
 
   return (
+    <MotionConfig reducedMotion="user">
     <div className="relative flex h-screen w-screen overflow-hidden bg-background text-foreground">
       <AnimatePresence>
         {!immersive && sidebarOpen && (
@@ -124,16 +125,33 @@ export function AppShell(): JSX.Element {
             onToggleSidebar={() => setSidebarOpen((o) => !o)}
           />
         )}
-        <main className="min-h-0 flex-1">
-          {view === 'home' ? (
-            <Home />
-          ) : view === 'collection' ? (
-            <CollectionView key={`${activeCollection?.kind}:${activeCollection?.label}`} />
-          ) : view === 'timeline' ? (
-            <TimeMachine />
-          ) : (
-            <DocumentEditor />
-          )}
+        <main className="relative min-h-0 flex-1 overflow-hidden">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={
+                view === 'document'
+                  ? `doc:${activeId}`
+                  : view === 'collection'
+                    ? `col:${activeCollection?.kind}:${activeCollection?.label}`
+                    : view
+              }
+              className="h-full"
+              initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            >
+              {view === 'home' ? (
+                <Home />
+              ) : view === 'collection' ? (
+                <CollectionView />
+              ) : view === 'timeline' ? (
+                <TimeMachine />
+              ) : (
+                <DocumentEditor />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
@@ -197,5 +215,6 @@ export function AppShell(): JSX.Element {
 
       <Celebration />
     </div>
+    </MotionConfig>
   );
 }

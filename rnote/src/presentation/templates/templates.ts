@@ -46,6 +46,22 @@ export function todayNoteTitle(): string {
   return today();
 }
 
+/** The user's saved first name (empty if not set) — used to personalise notes. */
+function userName(): string {
+  try {
+    return localStorage.getItem('rnote.name') ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function dayGreeting(): string {
+  const hour = new Date().getHours();
+  const part = hour < 5 ? 'evening' : hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
+  const name = userName();
+  return name ? `Good ${part}, ${name} — here's your day.` : `Good ${part} — here's your day.`;
+}
+
 export const DAILY_TEMPLATE_ID = 'daily';
 
 export const TEMPLATES: PageTemplate[] = [
@@ -66,6 +82,7 @@ export const TEMPLATES: PageTemplate[] = [
       icon: '📅',
       content: doc(
         h(1, today()),
+        callout('👋', dayGreeting()),
         h(2, 'Intentions'),
         tasks(['', '', '']),
         h(2, 'Notes'),

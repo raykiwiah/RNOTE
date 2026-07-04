@@ -30,6 +30,7 @@ export function Home(): JSX.Element {
   const openToday = useWorkspace((s) => s.openToday);
   const open = useWorkspace((s) => s.open);
   const mode = usePreferences((s) => s.mode);
+  const userName = usePreferences((s) => s.userName);
 
   const [capture, setCapture] = useState('');
   const [captured, setCaptured] = useState<{ inboxId: string } | null>(null);
@@ -67,7 +68,10 @@ export function Home(): JSX.Element {
             {now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
           </p>
           <h1 className="mt-1 flex items-center gap-2 font-display text-3xl font-bold tracking-tight text-foreground">
-            {greeting(now.getHours())}
+            <span>
+              {greeting(now.getHours())}
+              {userName && <span className="text-primary">, {userName}</span>}
+            </span>
             {mode === 'genz' && <Sparkles size={22} className="text-accent" />}
           </h1>
         </motion.header>
@@ -79,7 +83,7 @@ export function Home(): JSX.Element {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-7 rn-panel flex items-center gap-3 p-2 pl-4 shadow-sm"
+          className="rn-field mt-7 rn-panel flex items-center gap-3 p-2 pl-4 shadow-sm"
         >
           <Zap size={18} className="shrink-0 text-primary" />
           <input
@@ -201,22 +205,25 @@ function ActionCard({
   onClick: () => void;
 }): JSX.Element {
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onClick}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={cn(
-        'rn-panel flex items-center gap-3 p-3.5 text-left transition',
-        'hover:border-border-strong hover:shadow-md active:scale-[0.99]',
+        'rn-panel group flex items-center gap-3 p-3.5 text-left',
+        'hover:border-border-strong hover:shadow-lg',
       )}
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-110">
         {icon}
       </span>
       <span className="min-w-0">
         <span className="block truncate text-sm font-medium text-foreground">{title}</span>
         <span className="block truncate text-xs text-muted-foreground">{subtitle}</span>
       </span>
-    </button>
+    </motion.button>
   );
 }
 

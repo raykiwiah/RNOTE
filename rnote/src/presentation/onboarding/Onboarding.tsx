@@ -40,10 +40,11 @@ export function Onboarding(): JSX.Element {
   const [mode, setLocalMode] = useState<ModeName>(initialMode);
   const [theme, setLocalTheme] = useState<ThemeName>(initialTheme);
   const [autoOrganize, setAutoOrganizeLocal] = useState(false);
+  const [name, setName] = useState('');
 
   const finish = (): void => {
     setAutoOrganize(autoOrganize);
-    completeOnboarding({ mode, theme });
+    completeOnboarding({ mode, theme, name });
   };
 
   // Apply choices live so the whole screen previews the selection.
@@ -76,6 +77,30 @@ export function Onboarding(): JSX.Element {
             anytime. It only changes the look, never the features.
           </p>
         </div>
+
+        {/* Name — so RNOTE can greet you and personalise your notes. */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="mx-auto mb-7 max-w-xs"
+        >
+          <label htmlFor="rnote-name" className="mb-1.5 block text-center text-sm font-medium text-muted-foreground">
+            What should we call you?
+          </label>
+          <input
+            id="rnote-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') finish();
+            }}
+            placeholder="Your name"
+            autoFocus
+            autoComplete="given-name"
+            className="rn-field block w-full rounded-xl border border-border bg-surface px-4 py-2.5 text-center text-[15px] text-foreground outline-none placeholder:text-subtle"
+          />
+        </motion.div>
 
         <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {MODES.map((m) => {

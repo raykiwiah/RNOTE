@@ -6,15 +6,19 @@ export type ModeName = 'genz' | 'millennial';
 const THEME_KEY = 'rnote.theme';
 const MODE_KEY = 'rnote.mode';
 const ONBOARDED_KEY = 'rnote.onboarded';
+const NAME_KEY = 'rnote.name';
 
 interface PreferencesState {
   theme: ThemeName;
   mode: ModeName;
   onboarded: boolean;
+  /** The user's first name, used to personalise greetings and notes. */
+  userName: string;
   setTheme: (theme: ThemeName) => void;
   toggleTheme: () => void;
   setMode: (mode: ModeName) => void;
-  completeOnboarding: (choice: { mode: ModeName; theme: ThemeName }) => void;
+  setUserName: (name: string) => void;
+  completeOnboarding: (choice: { mode: ModeName; theme: ThemeName; name?: string }) => void;
 }
 
 function read<T extends string>(key: string, fallback: T, allowed: readonly T[]): T {
@@ -65,6 +69,19 @@ export const usePreferences = create<PreferencesState>((set, get) => ({
       return false;
     }
   })(),
+  userName: (() => {
+    try {
+      return localStorage.getItem(NAME_KEY) ?? '';
+    } catch {
+      return '';
+    }
+  })(),
+
+  setUserName: (name) => {
+    const value = name.trim();
+    persist(NAME_KEY, value);
+    set({ userName: value });
+  },
 
   setTheme: (theme) => {
     persist(THEME_KEY, theme);
@@ -83,12 +100,18 @@ export const usePreferences = create<PreferencesState>((set, get) => ({
     set({ mode });
   },
 
-  completeOnboarding: ({ mode, theme }) => {
+  completeOnboarding: ({ mode, theme, name }) => {
     persist(MODE_KEY, mode);
     persist(THEME_KEY, theme);
     persist(ONBOARDED_KEY, '1');
+    if (name !== undefined) persist(NAME_KEY, name.trim());
     applyToDom(theme, mode);
-    set({ mode, theme, onboarded: true });
+    set({
+      mode,
+      theme,
+      onboarded: true,
+      ...(name !== undefined ? { userName: name.trim() } : {}),
+    });
   },
 }));
 

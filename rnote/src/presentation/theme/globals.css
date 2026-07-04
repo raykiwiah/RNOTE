@@ -21,9 +21,25 @@
     overscroll-behavior: none;
   }
 
-  /* Focus ring — accessible, consistent, never removed without replacement. */
+  /* Focus ring — accessible on controls (buttons, links, toggles). */
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+    transition: box-shadow 0.18s ease;
+  }
+
+  /* Writing surfaces (inputs, textareas, the editor) show focus via the caret
+     plus a smooth container highlight (.rn-field) — never a hard, detached ring,
+     which read as an "off" floating box. */
+  input:focus-visible,
+  textarea:focus-visible,
+  [contenteditable='true']:focus,
+  [contenteditable='true']:focus-visible,
+  .ProseMirror:focus,
+  .ProseMirror:focus-visible {
+    outline: none;
+    box-shadow: none;
+    --tw-ring-shadow: 0 0 0 transparent;
+    --tw-ring-offset-shadow: 0 0 0 transparent;
   }
 
   ::selection {
@@ -54,6 +70,17 @@
   /* Shared surface treatment for cards, popovers, menus. */
   .rn-panel {
     @apply bg-elevated border border-border rounded-lg shadow-md;
+  }
+
+  /* Input containers: a smooth, gentle focus glow instead of a hard ring. */
+  .rn-field {
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .rn-field:focus-within {
+    border-color: hsl(var(--primary) / 0.55);
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.1);
   }
 
   /* Subtle skeleton shimmer used by loading states. */

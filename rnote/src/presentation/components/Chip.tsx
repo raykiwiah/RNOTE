@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '../lib/cn';
 
@@ -29,7 +30,11 @@ interface ChipProps {
 export function Chip({ label, icon, tone = 'neutral', active, title, onClick, onRemove }: ChipProps): JSX.Element {
   const interactive = Boolean(onClick);
   return (
-    <span
+    <motion.span
+      initial={{ opacity: 0, scale: 0.82 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 520, damping: 28 }}
+      whileTap={interactive ? { scale: 0.94 } : undefined}
       className={cn(
         'inline-flex h-7 items-center gap-1 rounded-full border pl-2 text-xs font-medium transition-colors',
         onRemove ? 'pr-1' : 'pr-2.5',
@@ -63,6 +68,6 @@ export function Chip({ label, icon, tone = 'neutral', active, title, onClick, on
           <X size={12} />
         </button>
       )}
-    </span>
+    </motion.span>
   );
 }
