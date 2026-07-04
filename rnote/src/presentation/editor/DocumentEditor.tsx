@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { FileText } from 'lucide-react';
 import type { RichDoc } from '@domain/blocks';
 import { countWords } from '@domain/blocks';
+import { isTableDoc, tableFromDoc } from '@domain/table';
 import type { DocumentDetail } from '@application/dto';
 import { useWorkspace } from '../state/workspace';
 import { useViewMode } from '../state/viewMode';
@@ -10,6 +11,7 @@ import { cn } from '../lib/cn';
 import { Editor } from './Editor';
 import { IconPicker } from './IconPicker';
 import { OrganizationBar } from './OrganizationBar';
+import { TableView } from '../table/TableView';
 
 /** Content pane. Resolves the active document and renders it, or an empty state. */
 export function DocumentEditor(): JSX.Element {
@@ -27,8 +29,13 @@ function DocumentEditorInner({ doc }: { doc: DocumentDetail }): JSX.Element {
   const saving = useWorkspace((s) => s.saving);
   const reading = useViewMode((s) => s.reading);
 
+  // A "table page" renders the database view instead of the rich-text editor.
+  const isTable = useMemo(() => isTableDoc(doc.content), [doc.content]);
+
   const [title, setTitle] = useState(doc.title);
-  const [wordCount, setWordCount] = useState(doc.wordCount);
+  const [wordCount, setWordCount] = useState(() =>
+    isTableDoc(doc.content) ? (tableFromDoc(doc.content)?.rows.length ?? 0) : doc.wordCount,
+  );
   const titleRef = useRef<HTMLTextAreaElement>(null);
 
   const debouncedRename = useDebouncedCallback((value: string) => rename(doc.id, value), 500);
@@ -36,7 +43,8 @@ function DocumentEditorInner({ doc }: { doc: DocumentDetail }): JSX.Element {
 
   const handleContentChange = useCallback(
     (content: RichDoc) => {
-      setWordCount(countWords(content));
+      const table = tableFromDoc(content);
+      setWordCount(table ? table.rows.length : countWords(content));
       debouncedSave(content);
     },
     [debouncedSave],
@@ -79,13 +87,21 @@ function DocumentEditorInner({ doc }: { doc: DocumentDetail }): JSX.Element {
 
         {!reading && <OrganizationBar docId={doc.id} />}
 
-        <div className="mt-2">
-          <Editor initialContent={doc.content} onChange={handleContentChange} editable={!reading} />
-        </div>
+        {isTable ? (
+          <TableView content={doc.content} onChange={handleContentChange} />
+        ) : (
+          <div className="mt-2">
+            <Editor initialContent={doc.content} onChange={handleContentChange} editable={!reading} />
+          </div>
+        )}
       </div>
 
       <footer className="sticky bottom-0 flex items-center justify-between border-t border-border bg-background/80 px-6 py-2 text-xs text-subtle backdrop-blur sm:px-10">
-        <span>{wordCount === 1 ? '1 word' : `${wordCount} words`}</span>
+        <span>
+          {isTable
+            ? `${wordCount} ${wordCount === 1 ? 'row' : 'rows'}`
+            : `${wordCount} ${wordCount === 1 ? 'word' : 'words'}`}
+        </span>
         <span className="flex items-center gap-1.5">
           <span
             className={`h-1.5 w-1.5 rounded-full transition-colors ${

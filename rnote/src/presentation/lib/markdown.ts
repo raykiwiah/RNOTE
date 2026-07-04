@@ -1,4 +1,5 @@
 import type { RichDoc, RichNode } from '@domain/blocks';
+import { TABLE_BLOCK, type TableData } from '@domain/table';
 
 /**
  * Serialize a document's block tree to Markdown for export (zero lock-in).
@@ -43,6 +44,25 @@ function serializeBlock(node: RichNode, depth: number): string {
     case 'callout': {
       const icon = (node.attrs?.icon as string) ?? '💡';
       return prefixLines(childBlocks(node, depth), '> ').replace(/^> /, `> ${icon} `);
+    }
+    case TABLE_BLOCK: {
+      const data = (node.attrs as { data?: TableData } | undefined)?.data;
+      if (!data || !Array.isArray(data.columns) || data.columns.length === 0) return '';
+      const esc = (v: unknown): string =>
+        v === null || v === undefined ? '' : String(v).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+      const header = `| ${data.columns.map((c) => esc(c.name)).join(' | ')} |`;
+      const divider = `| ${data.columns.map(() => '---').join(' | ')} |`;
+      const rows = data.rows.map(
+        (r) =>
+          `| ${data.columns
+            .map((c) => {
+              const v = r.cells[c.id];
+              if (c.type === 'checkbox') return v ? '☑' : '☐';
+              return esc(v);
+            })
+            .join(' | ')} |`,
+      );
+      return [header, divider, ...rows].join('\n');
     }
     case 'details': {
       const summary = (node.content ?? []).find((c) => c.type === 'detailsSummary');

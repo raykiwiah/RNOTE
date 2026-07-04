@@ -1,4 +1,5 @@
 import type { RichDoc, RichNode } from '@domain/blocks';
+import { createTable, docFromTable } from '@domain/table';
 
 export interface PageTemplate {
   id: string;
@@ -64,6 +65,8 @@ function dayGreeting(): string {
 
 export const DAILY_TEMPLATE_ID = 'daily';
 
+export const TABLE_TEMPLATE_ID = 'table';
+
 export const TEMPLATES: PageTemplate[] = [
   {
     id: 'blank',
@@ -71,6 +74,13 @@ export const TEMPLATES: PageTemplate[] = [
     description: 'Start from nothing',
     emoji: '📄',
     create: () => ({ title: '', icon: '', content: doc(p()) }),
+  },
+  {
+    id: TABLE_TEMPLATE_ID,
+    name: 'Table',
+    description: 'A database with typed columns',
+    emoji: '📊',
+    create: () => ({ title: '', icon: '📊', content: docFromTable(createTable()) }),
   },
   {
     id: 'daily',

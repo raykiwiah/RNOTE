@@ -99,8 +99,14 @@ Theme studio ▷ · Widget studio ▷ · Marketplace ▷ · PWA installable ✅
       check-ins. Gen Z: animated Home progress card (level ring, gradient XP bar,
       streak flame, badge shelf) + celebratory level-up/achievement toast.
       Millennial: identical numbers as one calm line, no motion (presentation-only).
-- [ ] **I6 · Databases v1 — Table view.** A "collection" page type with typed
-      properties (text/number/select/date/checkbox), add/edit rows, sort/filter.
+- [x] **I6 · Databases v1 — Table view.** ✅ Table page type (a single
+      `rnoteTable` block riding the normal document pipeline — persistence,
+      backup, trash, organization, timeline all free). Typed columns
+      (text/number/select/date/checkbox), inline cell editing, add/rename/
+      retype/delete columns, select options, add/delete rows, click-to-sort
+      headers (typed compare, natural text, empties last) with layout-spring
+      row shuffling, live filter, GitHub-table Markdown export. Created via
+      ⌘K "New table" or the 📊 Table template. Pure domain model + 7 tests.
 - [ ] **I7 · Databases v2 — Board / Gallery / Calendar views** over the same
       collection model; grouping; drag between columns.
 - [ ] **I8 · Trackers module.** Habit tracker + Mood tracker + Finance tracker

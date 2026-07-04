@@ -16,6 +16,7 @@ import {
   BookOpen,
   Settings,
   History,
+  Table2,
   Zap,
 } from 'lucide-react';
 import type { DocumentTreeNode } from '@application/dto';
@@ -29,6 +30,7 @@ import { downloadFile, pickTextFile, slugify } from '../lib/files';
 import { modLabel } from '../lib/platform';
 import { richDocToMarkdown } from '../lib/markdown';
 import { emit, OPEN_TEMPLATES_EVENT, OPEN_CAPTURE_EVENT, OPEN_SETTINGS_EVENT } from '../lib/events';
+import { TEMPLATES, TABLE_TEMPLATE_ID } from '../templates/templates';
 import { markBackedUp } from '../lib/backupState';
 
 interface CommandPaletteProps {
@@ -90,6 +92,17 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): JSX.Elem
         icon: <LayoutTemplate size={16} />,
         title: 'New page from template…',
         run: () => emit(OPEN_TEMPLATES_EVENT),
+      },
+      {
+        key: 'new-table',
+        group: 'Actions',
+        icon: <Table2 size={16} />,
+        title: 'New table',
+        subtitle: 'A database with typed columns',
+        run: () => {
+          const table = TEMPLATES.find((t) => t.id === TABLE_TEMPLATE_ID);
+          if (table) void useWorkspace.getState().createFromTemplate(table);
+        },
       },
       {
         key: 'quick-capture',
