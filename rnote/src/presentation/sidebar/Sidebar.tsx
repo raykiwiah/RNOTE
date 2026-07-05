@@ -8,6 +8,7 @@ import { DocTreeItem } from './DocTreeItem';
 import { SmartCollections } from './SmartCollections';
 import { Kbd } from '../components/Kbd';
 import { ThemeModeControls } from '../components/ThemeModeControls';
+import { ConnectivityControls } from '../components/ConnectivityControls';
 import { cn } from '../lib/cn';
 import { modLabel } from '../lib/platform';
 import { emit, OPEN_SETTINGS_EVENT } from '../lib/events';
@@ -151,6 +152,9 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
           <Settings size={15} />
           <span className="flex-1 text-left">Settings</span>
         </button>
+        <div className="px-1 pt-2">
+          <ConnectivityControls />
+        </div>
         <div className="px-1 pt-2">
           <ThemeModeControls />
         </div>

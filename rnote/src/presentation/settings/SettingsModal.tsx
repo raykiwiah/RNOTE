@@ -2,13 +2,9 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import {
   X,
-  Eye,
-  EyeOff,
   Check,
   AlertCircle,
-  Loader2,
   Sparkles,
-  ShieldCheck,
   Download,
   Upload,
   CalendarClock,
@@ -20,14 +16,12 @@ import {
   Lock,
 } from 'lucide-react';
 import { isWorkspaceBackup } from '@application/documents/backup';
-import type { AiProviderId } from '@application/ports/AiProvider';
-import { getAiProvider } from '@/composition/container';
-import { AI_PROVIDER_IDS, PROVIDER_LABELS, DEFAULT_MODELS } from '@infrastructure/ai/aiConfig';
 import { NETWORK_CAPABILITIES, capabilitiesEnabled } from '@domain/connectivity';
 import { useAiSettings } from '../state/aiSettings';
 import { useWorkspace } from '../state/workspace';
 import { useCalendar } from '../state/calendar';
 import { useConnectivity } from '../state/connectivity';
+import { AiConnection } from './AiConnection';
 import { cn } from '../lib/cn';
 import { downloadFile, pickTextFile } from '../lib/files';
 import { markBackedUp } from '../lib/backupState';
@@ -36,8 +30,6 @@ interface SettingsModalProps {
   open: boolean;
   onClose: () => void;
 }
-
-type TestState = { status: 'idle' | 'testing' } | { status: 'ok' | 'error'; message: string };
 
 /**
  * Settings - AI (bring-your-own, off by default), auto-organization, and data.
@@ -50,13 +42,10 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
   const cal = useCalendar();
   const conn = useConnectivity();
   const offline = conn.effective === 'offline';
-  const [showKey, setShowKey] = useState(false);
-  const [test, setTest] = useState<TestState>({ status: 'idle' });
   const [calUrl, setCalUrl] = useState('');
 
   useEffect(() => {
     if (!open) return;
-    setTest({ status: 'idle' });
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape') onClose();
     };
@@ -65,25 +54,6 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
   }, [open, onClose]);
 
   if (!open) return null;
-
-  const runTest = async (): Promise<void> => {
-    setTest({ status: 'testing' });
-    const provider = getAiProvider({ ignoreEnabled: true });
-    if (!provider) {
-      setTest({ status: 'error', message: 'Enter an API key first.' });
-      return;
-    }
-    const res = await provider.complete({
-      messages: [{ role: 'user', content: 'Reply with exactly: OK' }],
-      maxTokens: 5,
-      temperature: 0,
-    });
-    if (res.ok) {
-      setTest({ status: 'ok', message: `Connected - the model replied “${res.value.trim().slice(0, 40)}”.` });
-    } else {
-      setTest({ status: 'error', message: res.error.message });
-    }
-  };
 
   const exportBackup = async (): Promise<void> => {
     const backup = await buildBackup();
@@ -231,80 +201,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
             action={<Toggle checked={s.enabled} onChange={s.setEnabled} label="Enable AI features" />}
           >
             {offline && <OfflineNotice feature="AI" onGoOnline={() => conn.setPreference('online')} />}
-            <p className="flex gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs leading-relaxed text-muted-foreground">
-              <ShieldCheck size={26} className="shrink-0 text-success" />
-              Your note text will be sent to the AI provider you choose, using your own API key.
-              Nothing is sent anywhere until you turn this on. Keys are stored only on this device.
-            </p>
-
-            <Field label="Provider">
-              <select
-                value={s.provider}
-                onChange={(e) => s.setProvider(e.target.value as AiProviderId)}
-                className="h-9 w-full rounded-md border border-border bg-surface px-2 text-sm text-foreground outline-none focus:border-border-strong"
-              >
-                {AI_PROVIDER_IDS.map((id) => (
-                  <option key={id} value={id}>
-                    {PROVIDER_LABELS[id]}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="Model">
-              <input
-                value={s.model}
-                onChange={(e) => s.setModel(e.target.value)}
-                placeholder={DEFAULT_MODELS[s.provider]}
-                spellCheck={false}
-                className="h-9 w-full rounded-md border border-border bg-surface px-2.5 text-sm text-foreground outline-none focus:border-border-strong"
-              />
-            </Field>
-
-            <Field label="API key">
-              <div className="flex items-center gap-2">
-                <input
-                  type={showKey ? 'text' : 'password'}
-                  value={s.apiKey}
-                  onChange={(e) => s.setApiKey(e.target.value)}
-                  placeholder="Paste your key…"
-                  autoComplete="off"
-                  spellCheck={false}
-                  className="h-9 min-w-0 flex-1 rounded-md border border-border bg-surface px-2.5 font-mono text-sm text-foreground outline-none focus:border-border-strong"
-                />
-                <button
-                  type="button"
-                  aria-label={showKey ? 'Hide API key' : 'Show API key'}
-                  onClick={() => setShowKey((v) => !v)}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-surface-hover"
-                >
-                  {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              </div>
-            </Field>
-
-            <div className="mt-1 flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => void runTest()}
-                disabled={test.status === 'testing' || !s.apiKey}
-                className="flex h-9 items-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition hover:brightness-110 disabled:opacity-40"
-              >
-                {test.status === 'testing' && <Loader2 size={14} className="animate-spin" />}
-                Test connection
-              </button>
-              {(test.status === 'ok' || test.status === 'error') && (
-                <span
-                  className={cn(
-                    'flex items-center gap-1.5 text-xs',
-                    test.status === 'ok' ? 'text-success' : 'text-danger',
-                  )}
-                >
-                  {test.status === 'ok' ? <Check size={13} /> : <AlertCircle size={13} />}
-                  {test.message}
-                </span>
-              )}
-            </div>
+            <AiConnection />
           </Section>
 
           {/* Auto-organization */}
