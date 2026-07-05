@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { container } from '@/composition/container';
+import { isOnline } from '@infrastructure/net/connectivity';
 import type { StoredCalendarEvent } from '@application/ports/CalendarRepository';
 
 const service = container.calendar;
@@ -65,6 +66,8 @@ function readNotified(): string[] {
 }
 
 async function fetchIcs(url: string): Promise<string | null> {
+  // Offline mode / no connection: don't reach the network at all.
+  if (!isOnline()) return null;
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 20_000);

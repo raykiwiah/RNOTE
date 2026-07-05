@@ -15,14 +15,19 @@ import {
   RefreshCw,
   Trash2,
   Bell,
+  Wifi,
+  CloudOff,
+  Lock,
 } from 'lucide-react';
 import { isWorkspaceBackup } from '@application/documents/backup';
 import type { AiProviderId } from '@application/ports/AiProvider';
 import { getAiProvider } from '@/composition/container';
 import { AI_PROVIDER_IDS, PROVIDER_LABELS, DEFAULT_MODELS } from '@infrastructure/ai/aiConfig';
+import { NETWORK_CAPABILITIES, capabilitiesEnabled } from '@domain/connectivity';
 import { useAiSettings } from '../state/aiSettings';
 import { useWorkspace } from '../state/workspace';
 import { useCalendar } from '../state/calendar';
+import { useConnectivity } from '../state/connectivity';
 import { cn } from '../lib/cn';
 import { downloadFile, pickTextFile } from '../lib/files';
 import { markBackedUp } from '../lib/backupState';
@@ -35,7 +40,7 @@ interface SettingsModalProps {
 type TestState = { status: 'idle' | 'testing' } | { status: 'ok' | 'error'; message: string };
 
 /**
- * Settings — AI (bring-your-own, off by default), auto-organization, and data.
+ * Settings - AI (bring-your-own, off by default), auto-organization, and data.
  * Works fully with AI disabled; enabling shows explicit consent copy.
  */
 export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Element | null {
@@ -43,6 +48,8 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
   const buildBackup = useWorkspace((w) => w.buildBackup);
   const restoreBackup = useWorkspace((w) => w.restoreBackup);
   const cal = useCalendar();
+  const conn = useConnectivity();
+  const offline = conn.effective === 'offline';
   const [showKey, setShowKey] = useState(false);
   const [test, setTest] = useState<TestState>({ status: 'idle' });
   const [calUrl, setCalUrl] = useState('');
@@ -72,7 +79,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
       temperature: 0,
     });
     if (res.ok) {
-      setTest({ status: 'ok', message: `Connected — the model replied “${res.value.trim().slice(0, 40)}”.` });
+      setTest({ status: 'ok', message: `Connected - the model replied “${res.value.trim().slice(0, 40)}”.` });
     } else {
       setTest({ status: 'error', message: res.error.message });
     }
@@ -133,12 +140,97 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          {/* ── AI ─────────────────────────────────────────────── */}
+          {/* Connectivity */}
+          <Section
+            icon={<Wifi size={15} className="text-primary" />}
+            title="Connectivity"
+          >
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Choose whether RNOTE may use the network. <strong>Offline</strong> keeps everything on
+              this device - it also switches on automatically whenever you lose connection.{' '}
+              <strong>Online</strong> unlocks the network features below.
+            </p>
+
+            <div
+              role="radiogroup"
+              aria-label="Connectivity mode"
+              className="grid grid-cols-2 gap-2"
+            >
+              <ConnChoice
+                selected={conn.preference === 'offline'}
+                onClick={() => conn.setPreference('offline')}
+                icon={<CloudOff size={16} />}
+                title="Offline"
+                subtitle="Fully local & private"
+              />
+              <ConnChoice
+                selected={conn.preference === 'online'}
+                onClick={() => conn.setPreference('online')}
+                icon={<Wifi size={16} />}
+                title="Online"
+                subtitle="Network features on"
+              />
+            </div>
+
+            <p
+              className={cn(
+                'flex items-start gap-2 rounded-lg border px-3 py-2 text-xs leading-relaxed',
+                conn.autoOffline
+                  ? 'border-warning/40 bg-warning/10 text-foreground'
+                  : offline
+                    ? 'border-border bg-surface text-muted-foreground'
+                    : 'border-success/40 bg-success/10 text-foreground',
+              )}
+            >
+              {conn.autoOffline ? (
+                <>
+                  <CloudOff size={15} className="mt-0.5 shrink-0 text-warning" />
+                  No connection right now - RNOTE is automatically offline. Network features resume
+                  the moment you reconnect; your work keeps saving locally.
+                </>
+              ) : offline ? (
+                <>
+                  <Lock size={15} className="mt-0.5 shrink-0 text-subtle" />
+                  Offline - nothing leaves this device. Everything except the features below works
+                  exactly the same.
+                </>
+              ) : (
+                <>
+                  <Wifi size={15} className="mt-0.5 shrink-0 text-success" />
+                  Online - network features are available.
+                </>
+              )}
+            </p>
+
+            <ul className="flex flex-col gap-1.5">
+              {NETWORK_CAPABILITIES.map((c) => {
+                const enabled = capabilitiesEnabled(conn.effective);
+                return (
+                  <li key={c.id} className="flex items-start gap-2 text-xs">
+                    <span
+                      className={cn(
+                        'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full',
+                        enabled ? 'bg-success/15 text-success' : 'bg-surface-hover text-subtle',
+                      )}
+                    >
+                      {enabled ? <Check size={11} /> : <Lock size={10} />}
+                    </span>
+                    <span className={enabled ? 'text-foreground' : 'text-muted-foreground'}>
+                      <span className="font-medium">{c.label}</span> - {c.summary}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </Section>
+
+          {/* AI */}
           <Section
             icon={<Sparkles size={15} className="text-primary" />}
             title="AI features"
             action={<Toggle checked={s.enabled} onChange={s.setEnabled} label="Enable AI features" />}
           >
+            {offline && <OfflineNotice feature="AI" onGoOnline={() => conn.setPreference('online')} />}
             <p className="flex gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs leading-relaxed text-muted-foreground">
               <ShieldCheck size={26} className="shrink-0 text-success" />
               Your note text will be sent to the AI provider you choose, using your own API key.
@@ -215,7 +307,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
             </div>
           </Section>
 
-          {/* ── Auto-organization ──────────────────────────────── */}
+          {/* Auto-organization */}
           <Section
             title="Auto-organization"
             action={
@@ -227,7 +319,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
             }
           >
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Let RNOTE detect categories, projects, people and tags so notes file themselves —
+              Let RNOTE detect categories, projects, people and tags so notes file themselves -
               no folders. Works offline with built-in rules; sharper with AI on.
             </p>
             <Field label={`Ask me below ${s.confidenceThreshold}% confidence`}>
@@ -244,7 +336,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
             </Field>
           </Section>
 
-          {/* ── Calendar ───────────────────────────────────────── */}
+          {/* Calendar */}
           <Section
             icon={<CalendarClock size={15} className="text-primary" />}
             title="Calendar"
@@ -262,9 +354,10 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
               ) : undefined
             }
           >
+            {offline && <OfflineNotice feature="Calendar sync" onGoOnline={() => conn.setPreference('online')} />}
             <p className="text-xs leading-relaxed text-muted-foreground">
               Connect a calendar so RNOTE shows today&apos;s agenda on Home and reminds you before
-              events. Paste a calendar link (.ics), or import an exported .ics file — everything
+              events. Paste a calendar link (.ics), or import an exported .ics file - everything
               stays on this device.
             </p>
 
@@ -348,7 +441,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
             </div>
           </Section>
 
-          {/* ── Data ───────────────────────────────────────────── */}
+          {/* Data */}
           <Section title="Data">
             <p className="text-xs leading-relaxed text-muted-foreground">
               Everything lives in this browser. Export a backup regularly so you never lose it.
@@ -396,6 +489,63 @@ function Section({
       </div>
       <div className="flex flex-col gap-3">{children}</div>
     </section>
+  );
+}
+
+/** One choice in the Offline/Online segmented control. */
+function ConnChoice({
+  selected,
+  onClick,
+  icon,
+  title,
+  subtitle,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  icon: ReactNode;
+  title: string;
+  subtitle: string;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors',
+        selected
+          ? 'border-primary bg-primary/10'
+          : 'border-border bg-surface hover:bg-surface-hover',
+      )}
+    >
+      <span className={selected ? 'text-primary' : 'text-muted-foreground'}>{icon}</span>
+      <span className="min-w-0">
+        <span className={cn('block text-sm font-medium', selected ? 'text-foreground' : 'text-muted-foreground')}>
+          {title}
+        </span>
+        <span className="block text-[11px] text-subtle">{subtitle}</span>
+      </span>
+    </button>
+  );
+}
+
+/** Inline banner shown atop a network-only section while the app is offline. */
+function OfflineNotice({ feature, onGoOnline }: { feature: string; onGoOnline: () => void }): JSX.Element {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2 text-xs">
+      <CloudOff size={14} className="shrink-0 text-warning" />
+      <span className="flex-1 text-foreground">
+        {feature} is paused in Offline mode. You can still set it up here.
+      </span>
+      <button
+        type="button"
+        onClick={onGoOnline}
+        className="shrink-0 rounded-md bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground transition hover:brightness-110"
+      >
+        Go Online
+      </button>
+    </div>
   );
 }
 

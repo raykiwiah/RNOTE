@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Search, Plus, Sparkles, Trash2, Home as HomeIcon, CalendarDays, Settings, History } from 'lucide-react';
 import { useWorkspace } from '../state/workspace';
 import { usePreferences } from '../state/preferences';
+import { useConnectivity } from '../state/connectivity';
 import { DocTreeItem } from './DocTreeItem';
 import { SmartCollections } from './SmartCollections';
 import { Kbd } from '../components/Kbd';
@@ -28,7 +29,17 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
   const openTimeline = useWorkspace((s) => s.openTimeline);
   const view = useWorkspace((s) => s.view);
   const mode = usePreferences((s) => s.mode);
+  const effective = useConnectivity((s) => s.effective);
+  const autoOffline = useConnectivity((s) => s.autoOffline);
   const [trashOpen, setTrashOpen] = useState(false);
+
+  // The workspace stance, shown as a tiny live chip next to the presentation mode.
+  const conn =
+    effective === 'online'
+      ? { label: 'Online', dot: 'bg-success' }
+      : autoOffline
+        ? { label: 'Offline', dot: 'bg-warning' }
+        : { label: 'Local', dot: 'bg-subtle/60' };
 
   return (
     <aside className="flex h-full w-[264px] shrink-0 flex-col border-r border-border bg-surface">
@@ -40,7 +51,9 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
           <div className="truncate text-sm font-semibold text-foreground">{workspaceName}</div>
           <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-subtle">
             {mode === 'genz' && <Sparkles size={9} />}
-            {mode === 'genz' ? 'Gen Z' : 'Millennial'} · Local
+            {mode === 'genz' ? 'Gen Z' : 'Millennial'} ·
+            <span className={cn('h-1.5 w-1.5 rounded-full', conn.dot)} aria-hidden />
+            {conn.label}
           </div>
         </div>
       </div>

@@ -9,6 +9,7 @@ import { CollectionView } from '../collection/CollectionView';
 import { TimeMachine } from '../timeline/TimeMachine';
 import { MobileDock } from './MobileDock';
 import { Celebration } from '../gamification/Celebration';
+import { ConnectivityToast } from './ConnectivityToast';
 import { useWorkspace } from '../state/workspace';
 import { useViewMode } from '../state/viewMode';
 import { useCalendar } from '../state/calendar';
@@ -113,7 +114,7 @@ export function AppShell(): JSX.Element {
   }, [activeId, view]);
 
   // Calendar reminders: load once, then check for imminent events each minute
-  // while the app is open (local notifications — no backend, no tracking).
+  // while the app is open (local notifications - no backend, no tracking).
   useEffect(() => {
     const cal = useCalendar.getState();
     if (cal.sources.length > 0) void cal.load();
@@ -261,6 +262,7 @@ export function AppShell(): JSX.Element {
       </Suspense>
 
       <Celebration />
+      <ConnectivityToast />
     </div>
     </MotionConfig>
   );

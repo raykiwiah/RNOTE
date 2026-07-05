@@ -1,8 +1,13 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { AnthropicProvider } from '@infrastructure/ai/providers/AnthropicProvider';
 import { OpenAiProvider } from '@infrastructure/ai/providers/OpenAiProvider';
 import { GeminiProvider } from '@infrastructure/ai/providers/GeminiProvider';
 import { OpenRouterProvider } from '@infrastructure/ai/providers/OpenRouterProvider';
+import { CONNECTIVITY_KEY } from '@infrastructure/net/connectivity';
+
+// Providers only run when the app is Online, so opt in for these HTTP tests
+// (the network guard otherwise short-circuits before fetch).
+beforeEach(() => localStorage.setItem(CONNECTIVITY_KEY, 'online'));
 
 function mockFetch(response: { ok: boolean; status?: number; json?: unknown; text?: string }): ReturnType<typeof vi.fn> {
   const fn = vi.fn().mockResolvedValue({
