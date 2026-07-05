@@ -15,6 +15,7 @@ import {
   X,
   Table2,
   Kanban,
+  LayoutGrid,
 } from 'lucide-react';
 import type { RichDoc } from '@domain/blocks';
 import {
@@ -41,6 +42,7 @@ import {
 } from '@domain/table';
 import { useOnClickOutside } from '../hooks/useOnClickOutside';
 import { BoardView } from './BoardView';
+import { GalleryView } from './GalleryView';
 import { cn } from '../lib/cn';
 
 const TYPE_META: Record<ColumnType, { label: string; icon: ReactNode }> = {
@@ -59,9 +61,9 @@ interface TableViewProps {
 /**
  * Databases v1 — the table view. Typed columns, inline cell editing, column
  * management, click-to-sort headers (rows shuffle with layout springs), and a
- * live filter. A saved Table ⇄ Board toggle re-renders the same rows as a
- * kanban of select-column lanes. Pure operations from @domain/table;
- * persistence flows through the normal document save path.
+ * live filter. A saved Table · Board · Gallery switch re-renders the same rows
+ * as a kanban of select-column lanes or a grid of visual cards. Pure operations
+ * from @domain/table; persistence flows through the normal document save path.
  */
 export function TableView({ content, onChange }: TableViewProps): JSX.Element {
   const [table, setTable] = useState<TableData>(() => tableFromDoc(content) ?? createTable());
@@ -107,6 +109,7 @@ export function TableView({ content, onChange }: TableViewProps): JSX.Element {
             [
               { value: 'table', label: 'Table', icon: <Table2 size={13} /> },
               { value: 'board', label: 'Board', icon: <Kanban size={13} /> },
+              { value: 'gallery', label: 'Gallery', icon: <LayoutGrid size={13} /> },
             ] as const
           ).map((option) => (
             <button
@@ -132,7 +135,7 @@ export function TableView({ content, onChange }: TableViewProps): JSX.Element {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={mode === 'board' ? 'Filter cards…' : 'Filter rows…'}
+            placeholder={mode === 'table' ? 'Filter rows…' : 'Filter cards…'}
             className="h-full w-full bg-transparent text-sm text-foreground outline-none placeholder:text-subtle"
           />
         </div>
@@ -156,6 +159,8 @@ export function TableView({ content, onChange }: TableViewProps): JSX.Element {
 
       {mode === 'board' ? (
         <BoardView table={table} query={query} apply={apply} />
+      ) : mode === 'gallery' ? (
+        <GalleryView table={table} query={query} apply={apply} />
       ) : (
       <div className="rn-panel overflow-x-auto">
         <div role="table" aria-label="Table" className="min-w-fit text-sm">

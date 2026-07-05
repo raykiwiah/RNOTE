@@ -17,6 +17,7 @@ import {
   type TableRow,
   type BoardLane,
 } from '@domain/table';
+import { laneHue } from './accent';
 import { cn } from '../lib/cn';
 
 interface BoardViewProps {
@@ -24,12 +25,6 @@ interface BoardViewProps {
   /** Shared toolbar filter — cards are filtered the same way table rows are. */
   query: string;
   apply: (next: TableData) => void;
-}
-
-/** Deterministic, theme-friendly lane accent per option position. */
-const LANE_HUES = [258, 172, 24, 340, 205, 96, 46];
-function laneHue(index: number): number {
-  return LANE_HUES[index % LANE_HUES.length] ?? 258;
 }
 
 /**
@@ -152,6 +147,7 @@ export function BoardView({ table, query, apply }: BoardViewProps): JSX.Element 
                           setDropLane(null);
                         }}
                         onTitle={(value) => title && apply(updateCell(table, row.id, title.id, value))}
+                        onMove={(option) => apply(updateCell(table, row.id, column.id, option))}
                         onDelete={() => apply(removeRow(table, row.id))}
                       />
                     ))}
@@ -183,6 +179,7 @@ function Card({
   onDragStart,
   onDragEnd,
   onTitle,
+  onMove,
   onDelete,
 }: {
   row: TableRow;
@@ -193,9 +190,11 @@ function Card({
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: () => void;
   onTitle: (value: string | null) => void;
+  onMove: (option: string | null) => void;
   onDelete: () => void;
 }): JSX.Element {
   const titleValue = titleColumn ? row.cells[titleColumn.id] : null;
+  const laneValue = row.cells[groupColumn.id];
   // Up to two other non-empty cells become quiet meta chips under the title.
   const meta = table.columns
     .filter((c) => c.id !== titleColumn?.id && c.id !== groupColumn.id)
@@ -256,6 +255,24 @@ function Card({
           ))}
         </div>
       )}
+      {/* Drag-free move — the only way to change lanes on touch screens, and a
+          keyboard-accessible alternative everywhere. Hidden until hover/focus on
+          pointer devices; always visible on small screens. */}
+      <div className="mt-1.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover/card:opacity-100 max-md:opacity-100">
+        <select
+          value={typeof laneValue === 'string' && (groupColumn.options ?? []).includes(laneValue) ? laneValue : ''}
+          onChange={(e) => onMove(e.target.value || null)}
+          aria-label="Move card"
+          className="h-6 w-full cursor-pointer rounded border border-border bg-background px-1 text-[11px] text-muted-foreground outline-none hover:text-foreground"
+        >
+          <option value="">No {groupColumn.name}</option>
+          {(groupColumn.options ?? []).map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
     </article>
     </motion.div>
   );
