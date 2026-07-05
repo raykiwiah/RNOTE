@@ -3,7 +3,7 @@ name: Publish RNOTE to Pages (repo root)
 # GitHub Pages for this repo serves the branch root, so we build RNOTE and
 # publish its static output to the root. Triggered only by source changes under
 # rnote/ (the auto-commit below touches root build files, which the path filter
-# excludes — no infinite loop), plus a manual button.
+# excludes — no infinite loop, so no [skip ci] is needed), plus a manual button.
 on:
   push:
     branches: [main]
@@ -49,6 +49,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No build changes to publish."
           else
-            git commit -m "chore(pages): publish RNOTE build to root [skip ci]"
+            git commit -m "chore(pages): publish RNOTE build to root"
             git push
           fi
