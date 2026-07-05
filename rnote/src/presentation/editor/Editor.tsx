@@ -12,6 +12,7 @@ import DetailsContent from '@tiptap/extension-details-content';
 import { AnimatePresence } from 'framer-motion';
 import { Bold, Italic, Strikethrough, Code, Link as LinkIcon, Unlink } from 'lucide-react';
 import type { RichDoc } from '@domain/blocks';
+import { sanitizeUrl, sanitizeImageSrc } from '@domain/shared/url';
 import { SLASH_COMMANDS, filterCommands, type SlashCommand } from './commands';
 import { SlashMenu } from './SlashMenu';
 import { Callout } from './extensions/Callout';
@@ -142,12 +143,43 @@ export function Editor({ initialContent, onChange, editable = true }: EditorProp
       Details.configure({ persist: true, HTMLAttributes: { class: 'rn-toggle' } }),
       DetailsSummary,
       DetailsContent,
-      LinkExtension.configure({
+      // Sanitize href at render so a malicious `javascript:`/`data:` link from an
+      // imported backup or pasted HTML can never reach the DOM (stored-XSS guard).
+      LinkExtension.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            href: {
+              default: null,
+              parseHTML: (el) => el.getAttribute('href'),
+              renderHTML: (attrs) => {
+                const safe = sanitizeUrl(attrs.href);
+                return safe ? { href: safe } : {};
+              },
+            },
+          };
+        },
+      }).configure({
         openOnClick: false,
         autolink: true,
+        protocols: ['http', 'https', 'mailto', 'tel'],
         HTMLAttributes: { rel: 'noopener noreferrer nofollow', target: '_blank' },
       }),
-      Image.configure({ HTMLAttributes: { class: 'rn-image' } }),
+      Image.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            src: {
+              default: null,
+              parseHTML: (el) => el.getAttribute('src'),
+              renderHTML: (attrs) => {
+                const safe = sanitizeImageSrc(attrs.src);
+                return safe ? { src: safe } : {};
+              },
+            },
+          };
+        },
+      }).configure({ HTMLAttributes: { class: 'rn-image' } }),
       Placeholder.configure({
         placeholder: ({ node }) =>
           node.type.name === 'heading' ? 'Heading' : "Write, or press '/' for commands…",
@@ -187,9 +219,12 @@ export function Editor({ initialContent, onChange, editable = true }: EditorProp
     if (url === '' || url === 'https://') {
       chain.unsetLink().run();
     } else {
-      // Normalise bare domains (e.g. "example.com") to a valid absolute URL.
-      const href = /^(https?:\/\/|mailto:|tel:)/i.test(url) ? url : `https://${url}`;
-      chain.setLink({ href }).run();
+      // Normalise bare domains (e.g. "example.com") to a valid absolute URL,
+      // then sanitize (blocks javascript:/data: even if pasted into the field).
+      const normalized = /^(https?:\/\/|mailto:|tel:)/i.test(url) ? url : `https://${url}`;
+      const safe = sanitizeUrl(normalized);
+      if (safe) chain.setLink({ href: safe }).run();
+      else chain.unsetLink().run();
     }
     setLinkEditing(false);
   };
@@ -321,4 +356,3 @@ function MarkButton({
     </button>
   );
 }
-

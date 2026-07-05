@@ -3,6 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <!--
+      Content Security Policy — defense-in-depth against XSS. script-src is 'self'
+      plus the hash of the tiny inline theme-boot script below (no 'unsafe-inline'
+      for scripts, so injected inline script and javascript: URLs cannot run).
+      connect-src allows https: because AI providers and calendars are
+      bring-your-own (arbitrary hosts); everything else is locked to same-origin.
+      Note: frame-ancestors/X-Frame-Options can only be set via an HTTP response
+      header, which static GitHub Pages hosting does not allow — it is a no-op in
+      a <meta> tag, so it is intentionally omitted to avoid a console warning.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'sha256-q3KY0uwrf79C/0FAJhltnLQeQuVhUmk29QPmLBthrco='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; base-uri 'self'; object-src 'none'; form-action 'none'; upgrade-insecure-requests"
+    />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="color-scheme" content="light dark" />
     <meta name="description" content="RNOTE — a beautiful, intelligent, offline-first Personal Life Operating System." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
