@@ -31,6 +31,11 @@ jobs:
           cache-dependency-path: rnote/package-lock.json
       - run: npm ci
         working-directory: rnote
+      # Gate the publish on the same checks CI runs, so a red build (type error,
+      # lint failure, or a broken test) can never reach the live site.
+      - name: Verify (typecheck · lint · unit tests)
+        run: npm run typecheck && npm run lint && npm run test
+        working-directory: rnote
       - run: npx vite build --base=./
         working-directory: rnote
       - name: Publish build to repo root

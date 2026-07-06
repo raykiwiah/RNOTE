@@ -1,0 +1,48 @@
+name: CI
+
+# Fast, deterministic verification for every change under rnote/. Runs on pull
+# requests (gating merges into main) and on branch pushes (feedback while
+# developing). Pushes to main are covered by the deploy workflow, which runs the
+# same checks before publishing — so main is skipped here to avoid a redundant run.
+on:
+  pull_request:
+    paths:
+      - 'rnote/**'
+      - '.github/workflows/ci.yml'
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'rnote/**'
+      - '.github/workflows/ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: rnote/package-lock.json
+      - run: npm ci
+        working-directory: rnote
+      - name: Typecheck
+        run: npm run typecheck
+        working-directory: rnote
+      - name: Lint
+        run: npm run lint
+        working-directory: rnote
+      - name: Unit tests
+        run: npm run test
+        working-directory: rnote
+      - name: Production build
+        run: npm run build
+        working-directory: rnote
