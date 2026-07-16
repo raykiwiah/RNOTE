@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { FileText } from 'lucide-react';
-import type { RichDoc } from '@domain/blocks';
-import { countWords } from '@domain/blocks';
+import type { DocStats, RichDoc } from '@domain/blocks';
+import { documentStats } from '@domain/blocks';
 import { isTableDoc, tableFromDoc } from '@domain/table';
 import type { DocumentDetail } from '@application/dto';
 import { useWorkspace } from '../state/workspace';
@@ -12,6 +13,8 @@ import { Editor } from './Editor';
 import { IconPicker } from './IconPicker';
 import { OrganizationBar } from './OrganizationBar';
 import { TableView } from '../table/TableView';
+
+const EMPTY_STATS: DocStats = { words: 0, characters: 0, readingMinutes: 0 };
 
 /** Content pane. Resolves the active document and renders it, or an empty state. */
 export function DocumentEditor(): JSX.Element {
@@ -33,8 +36,11 @@ function DocumentEditorInner({ doc }: { doc: DocumentDetail }): JSX.Element {
   const isTable = useMemo(() => isTableDoc(doc.content), [doc.content]);
 
   const [title, setTitle] = useState(doc.title);
-  const [wordCount, setWordCount] = useState(() =>
-    isTableDoc(doc.content) ? (tableFromDoc(doc.content)?.rows.length ?? 0) : doc.wordCount,
+  const [rows, setRows] = useState(() =>
+    isTable ? (tableFromDoc(doc.content)?.rows.length ?? 0) : 0,
+  );
+  const [stats, setStats] = useState<DocStats>(() =>
+    isTable ? EMPTY_STATS : documentStats(doc.content),
   );
   const titleRef = useRef<HTMLTextAreaElement>(null);
 
@@ -44,7 +50,8 @@ function DocumentEditorInner({ doc }: { doc: DocumentDetail }): JSX.Element {
   const handleContentChange = useCallback(
     (content: RichDoc) => {
       const table = tableFromDoc(content);
-      setWordCount(table ? table.rows.length : countWords(content));
+      if (table) setRows(table.rows.length);
+      else setStats(documentStats(content));
       debouncedSave(content);
     },
     [debouncedSave],
@@ -97,11 +104,11 @@ function DocumentEditorInner({ doc }: { doc: DocumentDetail }): JSX.Element {
       </div>
 
       <footer className="sticky bottom-0 flex items-center justify-between border-t border-border bg-background/80 px-6 py-2 text-xs text-subtle backdrop-blur sm:px-10">
-        <span>
-          {isTable
-            ? `${wordCount} ${wordCount === 1 ? 'row' : 'rows'}`
-            : `${wordCount} ${wordCount === 1 ? 'word' : 'words'}`}
-        </span>
+        {isTable ? (
+          <span>{`${rows} ${rows === 1 ? 'row' : 'rows'}`}</span>
+        ) : (
+          <FooterStats stats={stats} />
+        )}
         <span className="flex items-center gap-1.5">
           <span
             className={`h-1.5 w-1.5 rounded-full transition-colors ${
@@ -111,6 +118,80 @@ function DocumentEditorInner({ doc }: { doc: DocumentDetail }): JSX.Element {
           {saving ? 'Saving…' : 'Saved locally'}
         </span>
       </footer>
+    </div>
+  );
+}
+
+/**
+ * The footer word count, upgraded to a live "N words · M min read" summary that
+ * opens a small insights popover (words · characters · reading time) on click.
+ */
+function FooterStats({ stats }: { stats: DocStats }): JSX.Element {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const onDown = (e: MouseEvent): void => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  const summary =
+    stats.words === 0
+      ? 'Empty page'
+      : `${stats.words.toLocaleString()} ${stats.words === 1 ? 'word' : 'words'} · ${stats.readingMinutes} min read`;
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-label="Document insights"
+        className="rounded-sm tabular-nums outline-none transition-colors hover:text-foreground focus-visible:text-foreground"
+      >
+        {summary}
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="absolute bottom-full left-0 mb-2 w-48 rounded-lg border border-border bg-surface p-3 text-foreground shadow-lg"
+          >
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-subtle">
+              Insights
+            </p>
+            <StatRow label="Words" value={stats.words.toLocaleString()} />
+            <StatRow label="Characters" value={stats.characters.toLocaleString()} />
+            <StatRow
+              label="Reading time"
+              value={stats.readingMinutes === 0 ? '—' : `~${stats.readingMinutes} min`}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function StatRow({ label, value }: { label: string; value: string }): JSX.Element {
+  return (
+    <div className="flex items-center justify-between py-0.5 text-xs">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium tabular-nums text-foreground">{value}</span>
     </div>
   );
 }

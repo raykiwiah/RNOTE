@@ -59,3 +59,35 @@ export function countWords(doc: RichDoc): number {
   if (text.length === 0) return 0;
   return text.split(/\s+/).length;
 }
+
+/** Average adult silent-reading speed, in words per minute. */
+export const READING_WPM = 200;
+
+/**
+ * Whole-minute reading estimate for a word count: 0 for an empty doc, and at
+ * least 1 once there is any text (so a short note never reads as "0 min").
+ */
+export function readingTimeMinutes(words: number, wpm: number = READING_WPM): number {
+  if (words <= 0) return 0;
+  return Math.max(1, Math.round(words / wpm));
+}
+
+/** Reading/typing statistics for a document, powering the editor's insight panel. */
+export interface DocStats {
+  words: number;
+  /** Characters actually typed (text nodes), excluding structural line breaks. */
+  characters: number;
+  /** Estimated silent-reading time in whole minutes (see {@link readingTimeMinutes}). */
+  readingMinutes: number;
+}
+
+/** Words, characters and reading time for a document, computed in one pass. */
+export function documentStats(doc: RichDoc): DocStats {
+  const text = extractText(doc);
+  const trimmed = text.trim();
+  const words = trimmed.length === 0 ? 0 : trimmed.split(/\s+/).length;
+  // extractText joins block nodes with '\n'; strip those so only typed
+  // characters (with their spaces) are counted.
+  const characters = text.replace(/\n/g, '').length;
+  return { words, characters, readingMinutes: readingTimeMinutes(words) };
+}
