@@ -7,6 +7,8 @@ import { useAiSettings } from '../state/aiSettings';
 import { useConnectivity } from '../state/connectivity';
 import { Button } from '../components/Button';
 import { cn } from '../lib/cn';
+import { TermsSheet, TermsDeclined } from './TermsSheet';
+import { TERMS_VERSION } from './terms';
 
 const MODES: {
   id: ModeName;
@@ -37,6 +39,7 @@ export function Onboarding(): JSX.Element {
   const setMode = usePreferences((s) => s.setMode);
   const setTheme = usePreferences((s) => s.setTheme);
   const completeOnboarding = usePreferences((s) => s.completeOnboarding);
+  const acceptTerms = usePreferences((s) => s.acceptTerms);
   const setAutoOrganize = useAiSettings((s) => s.setAutoOrganize);
   const connectivity = useConnectivity((s) => s.preference);
   const setConnectivity = useConnectivity((s) => s.setPreference);
@@ -46,10 +49,35 @@ export function Onboarding(): JSX.Element {
   const [autoOrganize, setAutoOrganizeLocal] = useState(false);
   const [name, setName] = useState('');
 
+  // Existing users (onboarded before terms existed) go straight to the terms
+  // gate; new users see setup first, then terms. Captured once so it's stable.
+  const [alreadyOnboarded] = useState(() => usePreferences.getState().onboarded);
+  const [step, setStep] = useState<'setup' | 'terms' | 'declined'>(
+    alreadyOnboarded ? 'terms' : 'setup',
+  );
+
   const finish = (): void => {
     setAutoOrganize(autoOrganize);
     completeOnboarding({ mode, theme, name });
   };
+
+  const handleAccept = (): void => {
+    acceptTerms(TERMS_VERSION);
+    // New users finish onboarding (persist name/mode/theme); already-onboarded
+    // users only needed to accept — their existing profile is untouched.
+    if (!alreadyOnboarded) finish();
+  };
+
+  if (step === 'declined') return <TermsDeclined onReview={() => setStep('terms')} />;
+  if (step === 'terms') {
+    return (
+      <TermsSheet
+        onAccept={handleAccept}
+        onDecline={() => setStep('declined')}
+        onBack={alreadyOnboarded ? undefined : () => setStep('setup')}
+      />
+    );
+  }
 
   // Apply choices live so the whole screen previews the selection.
   const chooseMode = (m: ModeName): void => {
@@ -97,7 +125,7 @@ export function Onboarding(): JSX.Element {
             value={name}
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') finish();
+              if (e.key === 'Enter') setStep('terms');
             }}
             placeholder="Your name"
             autoFocus
@@ -285,8 +313,8 @@ export function Onboarding(): JSX.Element {
         </div>
 
         <div className="flex justify-center">
-          <Button variant="primary" size="lg" onClick={finish} className="min-w-[220px]">
-            Enter RNOTE
+          <Button variant="primary" size="lg" onClick={() => setStep('terms')} className="min-w-[220px]">
+            Continue
             <ArrowRight size={18} />
           </Button>
         </div>

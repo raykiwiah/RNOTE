@@ -1,6 +1,7 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { usePreferences } from '../state/preferences';
 import { useWorkspace } from '../state/workspace';
+import { TERMS_VERSION } from '../onboarding/terms';
 import { AppShell } from './AppShell';
 import { Spinner } from '../components/Spinner';
 
@@ -11,6 +12,7 @@ const Onboarding = lazy(() =>
 
 export function App(): JSX.Element {
   const onboarded = usePreferences((s) => s.onboarded);
+  const termsAccepted = usePreferences((s) => s.termsAcceptedVersion === TERMS_VERSION);
   const status = useWorkspace((s) => s.status);
   const bootstrap = useWorkspace((s) => s.bootstrap);
 
@@ -18,7 +20,9 @@ export function App(): JSX.Element {
     void bootstrap();
   }, [bootstrap]);
 
-  if (!onboarded) {
+  // First run — or an existing user who hasn't accepted the current Terms — is
+  // routed through onboarding, which ends at the Terms gate.
+  if (!onboarded || !termsAccepted) {
     return (
       <Suspense fallback={<BootScreen />}>
         <Onboarding />

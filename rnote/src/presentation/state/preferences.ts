@@ -7,6 +7,7 @@ const THEME_KEY = 'rnote.theme';
 const MODE_KEY = 'rnote.mode';
 const ONBOARDED_KEY = 'rnote.onboarded';
 const NAME_KEY = 'rnote.name';
+const TERMS_KEY = 'rnote.terms.version';
 
 interface PreferencesState {
   theme: ThemeName;
@@ -14,10 +15,14 @@ interface PreferencesState {
   onboarded: boolean;
   /** The user's first name, used to personalise greetings and notes. */
   userName: string;
+  /** The Terms & Conditions version the user has accepted, or null if none yet. */
+  termsAcceptedVersion: string | null;
   setTheme: (theme: ThemeName) => void;
   toggleTheme: () => void;
   setMode: (mode: ModeName) => void;
   setUserName: (name: string) => void;
+  /** Record acceptance of a given Terms & Conditions version. */
+  acceptTerms: (version: string) => void;
   completeOnboarding: (choice: { mode: ModeName; theme: ThemeName; name?: string }) => void;
 }
 
@@ -76,6 +81,18 @@ export const usePreferences = create<PreferencesState>((set, get) => ({
       return '';
     }
   })(),
+  termsAcceptedVersion: (() => {
+    try {
+      return localStorage.getItem(TERMS_KEY);
+    } catch {
+      return null;
+    }
+  })(),
+
+  acceptTerms: (version) => {
+    persist(TERMS_KEY, version);
+    set({ termsAcceptedVersion: version });
+  },
 
   setUserName: (name) => {
     const value = name.trim();
