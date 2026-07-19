@@ -14,6 +14,7 @@ import {
   Wifi,
   CloudOff,
   Lock,
+  Compass,
 } from 'lucide-react';
 import { isWorkspaceBackup } from '@application/documents/backup';
 import { NETWORK_CAPABILITIES, capabilitiesEnabled } from '@domain/connectivity';
@@ -21,6 +22,7 @@ import { useAiSettings } from '../state/aiSettings';
 import { useWorkspace } from '../state/workspace';
 import { useCalendar } from '../state/calendar';
 import { useConnectivity } from '../state/connectivity';
+import { useTour } from '../state/tour';
 import { AiConnection } from './AiConnection';
 import { cn } from '../lib/cn';
 import { downloadFile, pickTextFile } from '../lib/files';
@@ -357,6 +359,25 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
                 className="flex h-9 items-center gap-2 rounded-md border border-border px-3 text-sm text-foreground transition hover:bg-surface-hover"
               >
                 <Upload size={15} /> Import backup…
+              </button>
+            </div>
+          </Section>
+
+          {/* Getting started */}
+          <Section title="Getting started">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              New here, or want a refresher? Replay the quick walkthrough of RNOTE.
+            </p>
+            <div className="mt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  useTour.getState().start();
+                }}
+                className="flex h-9 items-center gap-2 rounded-md border border-border px-3 text-sm text-foreground transition hover:bg-surface-hover"
+              >
+                <Compass size={15} /> Replay the welcome tour
               </button>
             </div>
           </Section>

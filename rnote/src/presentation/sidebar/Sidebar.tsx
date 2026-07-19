@@ -94,6 +94,7 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
         </button>
         <button
           type="button"
+          data-tour="search"
           onClick={onOpenSearch}
           className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface-hover"
         >
@@ -103,6 +104,7 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
         </button>
         <button
           type="button"
+          data-tour="new-page"
           onClick={() => createDocument(null)}
           className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface-hover"
         >
@@ -117,7 +119,7 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
         <div className="mt-1 px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-subtle">
           Private
         </div>
-        <nav aria-label="Pages" className="px-2">
+        <nav aria-label="Pages" data-tour="pages" className="px-2">
           {tree.length === 0 ? (
             <p className="px-2 py-3 text-xs text-subtle">No pages yet.</p>
           ) : (
@@ -146,16 +148,17 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
         </button>
         <button
           type="button"
+          data-tour="settings"
           onClick={() => emit(OPEN_SETTINGS_EVENT)}
           className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-surface-hover"
         >
           <Settings size={15} />
           <span className="flex-1 text-left">Settings</span>
         </button>
-        <div className="px-1 pt-2">
+        <div className="px-1 pt-2" data-tour="connectivity">
           <ConnectivityControls />
         </div>
-        <div className="px-1 pt-2">
+        <div className="px-1 pt-2" data-tour="mode">
           <ThemeModeControls />
         </div>
       </div>

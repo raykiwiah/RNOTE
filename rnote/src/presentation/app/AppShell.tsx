@@ -11,9 +11,12 @@ import { MobileDock } from './MobileDock';
 import { Celebration } from '../gamification/Celebration';
 import { ConnectivityToast } from './ConnectivityToast';
 import { AiConnectToast } from './AiConnectToast';
+import { ProductTour } from '../tour/ProductTour';
 import { useWorkspace } from '../state/workspace';
 import { useViewMode } from '../state/viewMode';
 import { useCalendar } from '../state/calendar';
+import { useTour } from '../state/tour';
+import { TOUR_VERSION } from '../tour/tourSteps';
 import { useHotkey } from '../hooks/useHotkey';
 import { IconButton } from '../components/IconButton';
 import {
@@ -127,6 +130,18 @@ export function AppShell(): JSX.Element {
     return () => window.clearInterval(timer);
   }, []);
 
+  // First-run product tour: auto-start shortly after the workspace mounts,
+  // unless the user has already seen or skipped this version.
+  const startTour = useTour((s) => s.start);
+  const tourSeen = useTour((s) => s.completedVersion === TOUR_VERSION);
+  useEffect(() => {
+    if (tourSeen || useTour.getState().active) return undefined;
+    const t = window.setTimeout(() => {
+      if (!useTour.getState().active) startTour();
+    }, 700);
+    return () => window.clearTimeout(t);
+  }, [tourSeen, startTour]);
+
   return (
     <MotionConfig reducedMotion="user">
     <div className="relative flex h-screen w-screen overflow-hidden bg-background text-foreground">
@@ -227,6 +242,7 @@ export function AppShell(): JSX.Element {
       {!immersive && (
         <motion.button
           type="button"
+          data-tour="capture"
           aria-label="Quick capture"
           onClick={() => emit(OPEN_CAPTURE_EVENT)}
           initial={{ scale: 0, rotate: -30 }}
@@ -265,6 +281,7 @@ export function AppShell(): JSX.Element {
       <Celebration />
       <ConnectivityToast />
       <AiConnectToast />
+      <ProductTour />
     </div>
     </MotionConfig>
   );
