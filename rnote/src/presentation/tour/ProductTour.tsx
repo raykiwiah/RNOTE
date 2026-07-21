@@ -12,28 +12,36 @@ const GAP = 14;
 interface Placed {
   top: number;
   left: number;
-  transform?: string;
+  width: number;
 }
 
-/** Position the coach-mark near the spotlit element, clamped to the viewport. */
+/**
+ * Position the coach-mark near the spotlit element, clamped to the viewport.
+ * The width is responsive (never wider than the screen), and positioning uses
+ * left/top only — never a CSS transform — because the tooltip is animated by
+ * framer-motion, whose transform would otherwise clobber a translate()-based
+ * centering and push the card off-screen (badly so on phones).
+ */
 function placeTooltip(rect: DOMRect | null, placement: TourPlacement | undefined): Placed {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  if (!rect || placement === 'center') {
-    return { top: vh / 2, left: vw / 2, transform: 'translate(-50%, -50%)' };
-  }
-  const clampX = (x: number): number => Math.max(GAP, Math.min(x, vw - TOOLTIP_W - GAP));
+  const width = Math.min(TOOLTIP_W, vw - 2 * GAP);
+  const clampX = (x: number): number => Math.max(GAP, Math.min(x, vw - width - GAP));
   const clampY = (y: number): number => Math.max(GAP, Math.min(y, vh - EST_H - GAP));
+
+  if (!rect || placement === 'center') {
+    return { top: clampY((vh - EST_H) / 2), left: (vw - width) / 2, width };
+  }
   switch (placement) {
     case 'right':
-      return { top: clampY(rect.top), left: clampX(rect.right + GAP) };
+      return { top: clampY(rect.top), left: clampX(rect.right + GAP), width };
     case 'left':
-      return { top: clampY(rect.top), left: clampX(rect.left - GAP - TOOLTIP_W) };
+      return { top: clampY(rect.top), left: clampX(rect.left - GAP - width), width };
     case 'top':
-      return { top: clampY(rect.top - GAP - EST_H), left: clampX(rect.left) };
+      return { top: clampY(rect.top - GAP - EST_H), left: clampX(rect.left), width };
     case 'bottom':
     default:
-      return { top: clampY(rect.bottom + GAP), left: clampX(rect.left) };
+      return { top: clampY(rect.bottom + GAP), left: clampX(rect.left), width };
   }
 }
 
@@ -136,8 +144,8 @@ export function ProductTour(): JSX.Element | null {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 6 }}
           transition={{ type: 'spring', stiffness: 420, damping: 32 }}
-          style={{ position: 'absolute', top: pos.top, left: pos.left, transform: pos.transform, width: TOOLTIP_W }}
-          className="max-w-[calc(100vw-28px)] rounded-xl border border-border bg-surface p-4 shadow-xl"
+          style={{ position: 'absolute', top: pos.top, left: pos.left, width: pos.width }}
+          className="rounded-xl border border-border bg-surface p-4 shadow-xl"
         >
           <div className="mb-1 flex items-center justify-between">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-primary">

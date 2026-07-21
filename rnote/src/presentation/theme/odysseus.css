@@ -174,6 +174,52 @@
   }
 }
 
+/* ── Sidebar voyage chart (OdysseusVoyagePanel) ─────────────────────────────── */
+
+/* The little vessel rides the swell — a slow, shallow bob so the chart feels
+   alive without ever pulling the eye from the workspace. */
+[data-skin='odysseus'] .rn-ody-ship {
+  animation: rn-ody-bob 6s ease-in-out infinite;
+  transform-origin: 104px 106px;
+}
+@keyframes rn-ody-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2.4px) rotate(-1deg);
+  }
+}
+/* The pointer star breathes, the way a bright star seems to over the sea. */
+[data-skin='odysseus'] .rn-ody-twinkle {
+  animation: rn-ody-twinkle 3.6s ease-in-out infinite;
+}
+@keyframes rn-ody-twinkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+/* A slow candle-gold sheen drifts across the chart on hover, like light on brass. */
+[data-skin='odysseus'] .rn-ody-chart::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, hsl(var(--accent) / 0.14) 50%, transparent 62%);
+  transform: translateX(-130%);
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-skin='odysseus'] .rn-ody-chart:hover::after {
+  transform: translateX(130%);
+}
+
 /* Primary actions catch a soft candle-gold sheen on hover; everything eases. */
 [data-skin='odysseus'] button {
   transition:
@@ -282,13 +328,15 @@
   mask-image: linear-gradient(90deg, transparent, black 30%);
 }
 
-/* Cards catch a slow candle-gold sheen on hover, like light across bronze. */
-[data-skin='odysseus'] .rn-panel {
+/* Cards catch a slow candle-gold sheen on hover, like light across bronze.
+   Excludes positioned panels (.fixed/.absolute — e.g. the mobile dock, the slash
+   menu) so this never overrides their own position/overflow. */
+[data-skin='odysseus'] .rn-panel:not(.fixed):not(.absolute) {
   position: relative;
   overflow: hidden;
   isolation: isolate;
 }
-[data-skin='odysseus'] .rn-panel::before {
+[data-skin='odysseus'] .rn-panel:not(.fixed):not(.absolute)::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -298,7 +346,7 @@
   transform: translateX(-130%);
   transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
 }
-[data-skin='odysseus'] .rn-panel:hover::before {
+[data-skin='odysseus'] .rn-panel:not(.fixed):not(.absolute):hover::before {
   transform: translateX(130%);
 }
 
@@ -379,6 +427,9 @@
   [data-skin='odysseus'] .rn-doc-page,
   [data-skin='odysseus'] .rn-panel::before,
   [data-skin='odysseus'] .rn-shooting-star,
+  [data-skin='odysseus'] .rn-ody-ship,
+  [data-skin='odysseus'] .rn-ody-twinkle,
+  [data-skin='odysseus'] .rn-ody-chart::after,
   [data-skin='odysseus'] .rn-ripple {
     animation: none;
     transition: none;
@@ -387,6 +438,8 @@
 [data-reduced-motion='true'] [data-skin='odysseus'] .rn-canvas::after,
 [data-skin='odysseus'][data-reduced-motion='true'] .rn-canvas::after,
 [data-skin='odysseus'][data-reduced-motion='true'] .rn-shooting-star,
+[data-skin='odysseus'][data-reduced-motion='true'] .rn-ody-ship,
+[data-skin='odysseus'][data-reduced-motion='true'] .rn-ody-twinkle,
 [data-reduced-motion='true'] [data-skin='odysseus'] .rn-doc-page {
   animation: none;
 }

@@ -27,6 +27,7 @@ import { Kbd } from '../components/Kbd';
 import { ThemeModeControls } from '../components/ThemeModeControls';
 import { ConnectivityControls } from '../components/ConnectivityControls';
 import { AtmosphereControls } from '../components/AtmosphereControls';
+import { OdysseusVoyagePanel } from '../components/OdysseusVoyagePanel';
 import { cn } from '../lib/cn';
 import { modLabel } from '../lib/platform';
 import { emit, OPEN_SETTINGS_EVENT } from '../lib/events';
@@ -143,7 +144,7 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
         </button>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pb-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-4">
         <SmartCollections />
 
         <div className="mt-1 px-2.5 pb-1 text-[11px] font-medium uppercase tracking-wide text-subtle">
@@ -165,6 +166,9 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
             ))
           )}
         </nav>
+
+        {/* Fills the quiet stretch of the sidebar with an Odyssey sea-chart. */}
+        {ody && <OdysseusVoyagePanel />}
       </div>
 
       <div className="border-t border-border p-2">

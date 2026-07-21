@@ -21,7 +21,7 @@ export function MobileDock({ onOpenSearch, onOpenSidebar }: MobileDockProps): JS
   return (
     <nav
       aria-label="Primary"
-      className="rn-panel fixed inset-x-0 bottom-4 z-30 mx-auto flex w-max items-center gap-1 rounded-full px-2 py-1.5 shadow-lg md:hidden"
+      className="rn-panel fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 mx-auto flex w-max items-center gap-1 rounded-full px-2 py-1.5 shadow-lg md:hidden"
     >
       <DockButton label="Home" active={view === 'home'} onClick={showHome}>
         <HomeIcon size={19} />

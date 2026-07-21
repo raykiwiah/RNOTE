@@ -92,21 +92,22 @@ export function Onboarding(): JSX.Element {
   };
 
   return (
-    <div className="rn-canvas flex min-h-screen items-center justify-center bg-background px-6 py-12">
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-2xl"
-      >
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-glow">
-            <span className="font-display text-2xl font-bold">R</span>
+    <div className="rn-canvas h-[100dvh] overflow-y-auto bg-background">
+      <div className="flex min-h-full items-center justify-center px-6 py-6 sm:py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-2xl"
+        >
+        <div className="mb-6 text-center sm:mb-8">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-glow sm:mb-5 sm:h-14 sm:w-14">
+            <span className="font-display text-xl font-bold sm:text-2xl">R</span>
           </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             Welcome to RNOTE
           </h1>
-          <p className="mx-auto mt-2 max-w-md text-[15px] text-muted-foreground">
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground sm:text-[15px]">
             Your private, offline-first life OS. Choose how it should feel — you can change this
             anytime. It only changes the look, never the features.
           </p>
@@ -117,7 +118,7 @@ export function Onboarding(): JSX.Element {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="mx-auto mb-7 max-w-xs"
+          className="mx-auto mb-5 max-w-xs sm:mb-7"
         >
           <label htmlFor="rnote-name" className="mb-1.5 block text-center text-sm font-medium text-muted-foreground">
             What should we call you?
@@ -136,7 +137,7 @@ export function Onboarding(): JSX.Element {
           />
         </motion.div>
 
-        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mb-5 grid grid-cols-1 gap-3 sm:mb-6 sm:grid-cols-2">
           {MODES.map((m) => {
             const Icon = m.icon;
             const selected = mode === m.id;
@@ -146,7 +147,7 @@ export function Onboarding(): JSX.Element {
                 type="button"
                 onClick={() => chooseMode(m.id)}
                 className={cn(
-                  'group relative overflow-hidden rounded-xl border p-5 text-left transition-all',
+                  'group relative overflow-hidden rounded-xl border p-4 text-left transition-all sm:p-5',
                   selected
                     ? 'border-primary bg-primary/5 shadow-glow'
                     : 'border-border bg-surface hover:border-border-strong',
@@ -245,7 +246,7 @@ export function Onboarding(): JSX.Element {
             ))}
           </div>
         </div>
-        <p className="mb-6 text-center text-xs text-subtle">
+        <p className="mb-4 text-center text-xs text-subtle sm:mb-6">
           Odysseus reimagines RNOTE as a cinematic voyage — deep navy, bronze and constellations.
           Change it anytime.
         </p>
@@ -280,13 +281,13 @@ export function Onboarding(): JSX.Element {
             })}
           </div>
         </div>
-        <p className="mb-8 text-center text-xs text-subtle">
+        <p className="mb-5 text-center text-xs text-subtle sm:mb-8">
           Offline keeps everything on this device; Online unlocks AI &amp; calendar sync. Auto-falls
           back to offline whenever you lose connection.
         </p>
 
         {/* Auto-organization — privacy-forward, defaults off. */}
-        <div className="mb-8 rounded-xl border border-border bg-surface p-4 text-left">
+        <div className="mb-6 rounded-xl border border-border bg-surface p-4 text-left sm:mb-8">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -352,7 +353,8 @@ export function Onboarding(): JSX.Element {
             <ArrowRight size={18} />
           </Button>
         </div>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

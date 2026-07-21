@@ -21,7 +21,8 @@ interface TermsSheetProps {
  */
 export function TermsSheet({ onAccept, onDecline, onBack }: TermsSheetProps): JSX.Element {
   return (
-    <div className="rn-canvas flex min-h-screen items-center justify-center bg-background px-6 py-12">
+    <div className="rn-canvas h-[100dvh] overflow-y-auto bg-background">
+      <div className="flex min-h-full items-center justify-center px-6 py-8">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -87,6 +88,7 @@ export function TermsSheet({ onAccept, onDecline, onBack }: TermsSheetProps): JS
           </div>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 }
@@ -97,7 +99,8 @@ export function TermsSheet({ onAccept, onDecline, onBack }: TermsSheetProps): JS
  */
 export function TermsDeclined({ onReview }: { onReview: () => void }): JSX.Element {
   return (
-    <div className="rn-canvas flex min-h-screen items-center justify-center bg-background px-6 py-12">
+    <div className="rn-canvas h-[100dvh] overflow-y-auto bg-background">
+      <div className="flex min-h-full items-center justify-center px-6 py-8">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -120,6 +123,7 @@ export function TermsDeclined({ onReview }: { onReview: () => void }): JSX.Eleme
           </Button>
         </div>
       </motion.div>
+      </div>
     </div>
   );
 }
