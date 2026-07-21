@@ -154,15 +154,24 @@
 
 /* ── Micro-interactions ─────────────────────────────────────────────────────── */
 
-/* A note unfurls like a scroll when opened. DocumentEditor remounts per page,
-   so this plays on each new chronicle. */
-[data-skin='odysseus'] .rn-editor {
-  animation: rn-ody-unfurl var(--duration-base, 240ms) cubic-bezier(0.16, 1, 0.3, 1) both;
-  transform-origin: top center;
+/* Opening a chronicle turns like a page of an ancient manuscript. The document
+   column remounts per page (keyed by id), so this plays on each note you open. */
+[data-skin='odysseus'] .rn-doc-page {
+  animation: rn-ody-page-turn 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: left center;
+  backface-visibility: hidden;
 }
-@keyframes rn-ody-unfurl {
-  from { opacity: 0; transform: translateY(8px) scaleY(0.985); }
-  to { opacity: 1; transform: none; }
+@keyframes rn-ody-page-turn {
+  from {
+    opacity: 0;
+    transform: perspective(2200px) rotateY(11deg) translateX(-10px);
+    box-shadow: -34px 0 46px hsl(220 60% 2% / 0.28);
+  }
+  to {
+    opacity: 1;
+    transform: perspective(2200px) rotateY(0deg) translateX(0);
+    box-shadow: 0 0 0 transparent;
+  }
 }
 
 /* Primary actions catch a soft candle-gold sheen on hover; everything eases. */
@@ -367,7 +376,7 @@
 /* Respect reduced motion: drop the decorative animations, keep the atmosphere. */
 @media (prefers-reduced-motion: reduce) {
   [data-skin='odysseus'] .rn-canvas::after,
-  [data-skin='odysseus'] .rn-editor,
+  [data-skin='odysseus'] .rn-doc-page,
   [data-skin='odysseus'] .rn-panel::before,
   [data-skin='odysseus'] .rn-shooting-star,
   [data-skin='odysseus'] .rn-ripple {
@@ -378,6 +387,6 @@
 [data-reduced-motion='true'] [data-skin='odysseus'] .rn-canvas::after,
 [data-skin='odysseus'][data-reduced-motion='true'] .rn-canvas::after,
 [data-skin='odysseus'][data-reduced-motion='true'] .rn-shooting-star,
-[data-reduced-motion='true'] .rn-editor {
+[data-reduced-motion='true'] [data-skin='odysseus'] .rn-doc-page {
   animation: none;
 }

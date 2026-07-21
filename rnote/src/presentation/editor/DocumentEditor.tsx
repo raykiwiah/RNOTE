@@ -73,7 +73,7 @@ function DocumentEditorInner({ doc }: { doc: DocumentDetail }): JSX.Element {
 
   return (
     <div className={cn('flex h-full flex-col overflow-y-auto', reading && 'rn-reading')}>
-      <div className="mx-auto w-full max-w-[760px] flex-1 px-6 pb-40 pt-14 sm:px-10">
+      <div className="rn-doc-page mx-auto w-full max-w-[760px] flex-1 px-6 pb-40 pt-14 sm:px-10">
         <IconPicker value={doc.icon} onChange={(icon) => setIcon(doc.id, icon)} />
 
         <textarea

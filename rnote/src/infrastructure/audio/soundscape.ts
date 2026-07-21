@@ -132,3 +132,37 @@ export function stopSoundscape(): void {
   helpers = [];
   master = null;
 }
+
+/**
+ * A short, synthesized flourish for a discrete moment. 'capture' is a soft quill
+ * tick as a thought is preserved; 'achievement' is a small rising lyre. Reuses
+ * the ambient context when present; a no-op where Web Audio is unavailable.
+ */
+export function playCue(type: 'capture' | 'achievement'): void {
+  const Ctor = audioCtor();
+  if (!Ctor) return;
+  ctx = ctx ?? new Ctor();
+  if (ctx.state === 'suspended') void ctx.resume();
+  const now = ctx.currentTime;
+
+  const tone = (freq: number, at: number, dur: number, peak: number, kind: OscillatorType): void => {
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    osc.type = kind;
+    osc.frequency.value = freq;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(peak, at + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(at);
+    osc.stop(at + dur + 0.05);
+  };
+
+  if (type === 'capture') {
+    tone(880, now, 0.14, 0.07, 'triangle');
+  } else {
+    // A gentle C-major arpeggio, like a plucked lyre.
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => tone(f, now + i * 0.085, 0.5, 0.075, 'sine'));
+  }
+}

@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGameStats } from '../state/gameStats';
 import { usePreferences } from '../state/preferences';
+import { cue } from '../lib/sound';
 
 const CONFETTI = ['#f59e0b', '#ec4899', '#8b5cf6', '#22c55e', '#3b82f6'];
 
@@ -16,6 +17,7 @@ export function Celebration(): JSX.Element | null {
 
   useEffect(() => {
     if (!celebration) return;
+    cue('achievement'); // a lyre flourish under Odysseus (no-op otherwise)
     const timer = window.setTimeout(dismiss, 3800);
     return () => window.clearTimeout(timer);
   }, [celebration, dismiss]);

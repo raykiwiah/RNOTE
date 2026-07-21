@@ -17,6 +17,7 @@ import { useWorkspace } from '../state/workspace';
 import { usePreferences } from '../state/preferences';
 import { useLexicon, type LexKey } from '../theme/lexicon';
 import { OdysseusMark } from '../components/OdysseusMark';
+import { cue } from '../lib/sound';
 import { cn } from '../lib/cn';
 import { emit, OPEN_TEMPLATES_EVENT, OPEN_SEARCH_EVENT } from '../lib/events';
 import { modLabel } from '../lib/platform';
@@ -52,6 +53,7 @@ export function Home(): JSX.Element {
     setCapture('');
     const inboxId = await quickCapture(text);
     if (!inboxId) return;
+    cue('capture');
     // Stay in flow: confirm quietly instead of yanking the user to a new page.
     setCaptured({ inboxId });
     setTimeout(() => setCaptured(null), 4000);

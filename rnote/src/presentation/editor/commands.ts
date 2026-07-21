@@ -20,6 +20,9 @@ import { pickImageDataUrl } from '../lib/files';
 export interface SlashCommand {
   id: string;
   title: string;
+  /** Display name under the Odysseus skin; falls back to `title`. Keywords are
+      unchanged, so search still works ("/heading" still finds the Canto). */
+  odysseus?: string;
   description: string;
   icon: LucideIcon;
   keywords: string[];
@@ -35,6 +38,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'paragraph',
     title: 'Text',
+    odysseus: 'Verse',
     description: 'Plain paragraph',
     icon: Type,
     keywords: ['text', 'paragraph', 'plain', 'body'],
@@ -43,6 +47,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'heading1',
     title: 'Heading 1',
+    odysseus: 'Canto',
     description: 'Large section title',
     icon: Heading1,
     keywords: ['h1', 'title', 'heading', 'big'],
@@ -51,6 +56,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'heading2',
     title: 'Heading 2',
+    odysseus: 'Stanza',
     description: 'Medium section title',
     icon: Heading2,
     keywords: ['h2', 'subtitle', 'heading'],
@@ -59,6 +65,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'heading3',
     title: 'Heading 3',
+    odysseus: 'Passage',
     description: 'Small section title',
     icon: Heading3,
     keywords: ['h3', 'heading'],
@@ -67,6 +74,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'bulletList',
     title: 'Bulleted list',
+    odysseus: 'Manifest',
     description: 'A simple bullet list',
     icon: List,
     keywords: ['bullet', 'unordered', 'list', 'ul'],
@@ -75,6 +83,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'orderedList',
     title: 'Numbered list',
+    odysseus: 'Itinerary',
     description: 'A numbered list',
     icon: ListOrdered,
     keywords: ['numbered', 'ordered', 'list', 'ol'],
@@ -83,6 +92,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'taskList',
     title: 'To-do list',
+    odysseus: 'Quests',
     description: 'Track tasks with checkboxes',
     icon: ListTodo,
     keywords: ['todo', 'task', 'checkbox', 'check'],
@@ -91,6 +101,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'quote',
     title: 'Quote',
+    odysseus: 'Oracle',
     description: 'Capture a quotation',
     icon: TextQuote,
     keywords: ['quote', 'blockquote', 'citation'],
@@ -99,6 +110,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'code',
     title: 'Code',
+    odysseus: 'Runes',
     description: 'A formatted code block',
     icon: Code2,
     keywords: ['code', 'snippet', 'pre', 'monospace'],
@@ -107,6 +119,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'callout',
     title: 'Callout',
+    odysseus: 'Beacon',
     description: 'Make text stand out',
     icon: Lightbulb,
     keywords: ['callout', 'note', 'info', 'tip', 'aside', 'highlight'],
@@ -115,6 +128,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'toggle',
     title: 'Toggle',
+    odysseus: 'Sealed scroll',
     description: 'A collapsible section',
     icon: ListCollapse,
     keywords: ['toggle', 'collapse', 'details', 'accordion', 'expand'],
@@ -123,6 +137,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'image',
     title: 'Image',
+    odysseus: 'Tapestry',
     description: 'Upload an image',
     icon: ImageIcon,
     keywords: ['image', 'picture', 'photo', 'upload', 'img'],
@@ -135,6 +150,7 @@ export const SLASH_COMMANDS: SlashCommand[] = [
   {
     id: 'divider',
     title: 'Divider',
+    odysseus: 'Meridian',
     description: 'A horizontal rule',
     icon: Minus,
     keywords: ['divider', 'hr', 'rule', 'separator', 'line'],
