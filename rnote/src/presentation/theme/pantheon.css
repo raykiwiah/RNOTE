@@ -1,0 +1,409 @@
+/**
+ * ── The Pantheon skin ─────────────────────────────────────────────────────────
+ * A Millennial-only atmosphere of Greek & Norse myth — warm marble, bronze, gold
+ * and aegean, calm and classical. The exact palette is supplied by the chosen
+ * patron as inline custom properties on :root (see theme/greekRoster.ts); this
+ * file provides the marble canvas + flair those signature colours ride on, and
+ * the signature effect keyframes. Everything is scoped to [data-skin='pantheon'],
+ * both palette blocks mirror the Millennial token specificity so they win by
+ * source order, and all motion respects prefers-reduced-motion.
+ */
+
+/* ── Base structure · Light (sunlit marble) ─────────────────────────────────── */
+[data-skin='pantheon'] {
+  --background: 40 30% 96%;
+  --surface: 40 40% 99%;
+  --surface-hover: 38 26% 93%;
+  --elevated: 0 0% 100%;
+  --overlay: 35 30% 10%;
+
+  --foreground: 35 25% 16%;
+  --muted: 40 24% 92%;
+  --muted-foreground: 35 14% 40%;
+  --subtle: 35 12% 55%;
+
+  --border: 38 22% 85%;
+  --border-strong: 36 22% 74%;
+
+  --av-energy: 44 80% 60%;
+
+  --radius: 8px;
+  --font-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia,
+    'Times New Roman', serif;
+
+  --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.14), 0 8px 30px hsl(var(--primary) / 0.18);
+  --gradient-hero: linear-gradient(
+    135deg,
+    hsl(var(--primary) / 0.14),
+    hsl(var(--accent) / 0.1) 55%,
+    hsl(var(--av-energy) / 0.08)
+  );
+  --gradient-card: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.06));
+}
+
+/* ── Base structure · Dark (temple at dusk) ─────────────────────────────────── */
+[data-skin='pantheon'][data-theme='dark'] {
+  --background: 35 16% 9%;
+  --surface: 35 14% 12%;
+  --surface-hover: 35 12% 17%;
+  --elevated: 35 14% 14%;
+  --overlay: 35 30% 2%;
+
+  --foreground: 40 20% 90%;
+  --muted: 35 12% 17%;
+  --muted-foreground: 38 12% 64%;
+  --subtle: 38 10% 50%;
+
+  --border: 35 12% 23%;
+  --border-strong: 35 14% 33%;
+
+  --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.22), 0 10px 40px hsl(var(--primary) / 0.26);
+}
+
+/* ── Marble canvas: divine light from above + a fine fresco grain ───────────── */
+[data-skin='pantheon'] .rn-canvas {
+  position: relative;
+  isolation: isolate;
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(120% 80% at 50% -14%, hsl(var(--av-energy) / 0.12), transparent 55%),
+    radial-gradient(90% 70% at 100% 100%, hsl(var(--primary) / 0.08), transparent 60%);
+}
+[data-skin='pantheon'] .rn-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: radial-gradient(hsl(var(--foreground) / 0.04) 0.5px, transparent 1.2px);
+  background-size: 7px 7px;
+}
+/* A slow shaft of temple light drifting across the marble. */
+[data-skin='pantheon'] .rn-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent 40%, hsl(var(--av-energy) / 0.06) 50%, transparent 60%);
+  animation: rn-pan-light 22s ease-in-out infinite alternate;
+}
+@keyframes rn-pan-light {
+  from { transform: translateX(-8%); opacity: 0.6; }
+  to { transform: translateX(8%); opacity: 1; }
+}
+
+/* ── Typography: classical serif, gently spaced ─────────────────────────────── */
+[data-skin='pantheon'] .font-display {
+  letter-spacing: 0.01em;
+}
+
+/* ── Buttons & cards catch a soft gold sheen ────────────────────────────────── */
+[data-skin='pantheon'] button {
+  transition:
+    background-color var(--duration-fast, 140ms) ease,
+    color var(--duration-fast, 140ms) ease,
+    box-shadow var(--duration-base, 220ms) ease,
+    transform var(--duration-base, 220ms) cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-skin='pantheon'] .bg-primary:hover {
+  box-shadow: var(--shadow-glow);
+}
+[data-skin='pantheon'] .rn-panel:not(.fixed):not(.absolute) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+[data-skin='pantheon'] .rn-panel:not(.fixed):not(.absolute)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 36%, hsl(var(--accent) / 0.12) 50%, transparent 64%);
+  transform: translateX(-130%);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-skin='pantheon'] .rn-panel:not(.fixed):not(.absolute):hover::before {
+  transform: translateX(130%);
+}
+
+[data-skin='pantheon'] ::selection {
+  background: hsl(var(--primary) / 0.24);
+}
+[data-skin='pantheon'] * {
+  scrollbar-color: hsl(var(--primary) / 0.5) transparent;
+}
+[data-skin='pantheon'] ::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.4);
+  border-radius: 9999px;
+}
+
+/* ── Emblem panel (reuses the shared VariantEmblemPanel .rn-av-* classes) ────── */
+[data-skin='pantheon'] .rn-av-emblem {
+  animation: rn-pan-emblem 5s ease-in-out infinite;
+}
+@keyframes rn-pan-emblem {
+  0%, 100% { filter: drop-shadow(0 0 3px hsl(var(--primary) / 0.3)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 10px hsl(var(--primary) / 0.5)); transform: scale(1.03); }
+}
+[data-skin='pantheon'] .rn-av-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, hsl(var(--av-energy) / 0.14) 50%, transparent 62%);
+  transform: translateX(-130%);
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-skin='pantheon'] .rn-av-card:hover::after {
+  transform: translateX(130%);
+}
+
+/* ══ Signature ambient effects (PantheonEffects) ════════════════════════════════ */
+
+/* Zeus / Thor — thunder: a sky flash and a bolt. */
+.rn-pan-flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% -12%, hsl(var(--av-energy) / 0.45), transparent 60%);
+  opacity: 0;
+  animation: rn-pan-flash 8s ease-out infinite;
+}
+.rn-pan-bolt {
+  position: absolute;
+  top: -3%;
+  left: 58%;
+  width: 54px;
+  height: 44%;
+  opacity: 0;
+  filter: drop-shadow(0 0 7px hsl(var(--av-energy)));
+  animation: rn-pan-boltfade 8s ease-out infinite;
+}
+@keyframes rn-pan-flash {
+  0%, 9%, 100% { opacity: 0; }
+  2% { opacity: 0.45; }
+  4% { opacity: 0.12; }
+  6% { opacity: 0.3; }
+}
+@keyframes rn-pan-boltfade {
+  0%, 7%, 100% { opacity: 0; }
+  2% { opacity: 0.9; }
+  3.5% { opacity: 0.2; }
+  5% { opacity: 0.65; }
+}
+
+/* Poseidon — tide: wave crests rolling along the bottom. */
+.rn-pan-tide {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 90px;
+  opacity: 0.5;
+  animation: rn-pan-tide 9s ease-in-out infinite;
+}
+@keyframes rn-pan-tide {
+  0%, 100% { transform: translate(-3%, 8px); }
+  50% { transform: translate(3%, 0); }
+}
+
+/* Hades / (fire) — embers rising from below. */
+.rn-pan-embers span {
+  position: absolute;
+  bottom: -8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: hsl(var(--av-energy));
+  box-shadow: 0 0 8px 2px hsl(var(--av-energy) / 0.7);
+  opacity: 0;
+  animation: rn-pan-ember 6s ease-in infinite;
+}
+.rn-pan-embers span:nth-child(1) { left: 14%; animation-delay: 0s; }
+.rn-pan-embers span:nth-child(2) { left: 38%; animation-delay: 1.6s; }
+.rn-pan-embers span:nth-child(3) { left: 63%; animation-delay: 3s; }
+.rn-pan-embers span:nth-child(4) { left: 84%; animation-delay: 4.4s; }
+@keyframes rn-pan-ember {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(-70vh) scale(1); opacity: 0; }
+}
+
+/* Apollo / Nike — radiance: golden rays pulsing from above + rising motes. */
+.rn-pan-radiance {
+  position: absolute;
+  top: -30%;
+  left: 50%;
+  width: 140%;
+  height: 100%;
+  transform: translateX(-50%);
+  background: conic-gradient(
+    from 180deg at 50% 0%,
+    transparent 0deg,
+    hsl(var(--av-energy) / 0.1) 8deg,
+    transparent 16deg,
+    transparent 30deg,
+    hsl(var(--av-energy) / 0.08) 38deg,
+    transparent 46deg
+  );
+  opacity: 0;
+  animation: rn-pan-radiance 7s ease-in-out infinite;
+}
+@keyframes rn-pan-radiance {
+  0%, 100% { opacity: 0.3; transform: translateX(-50%) rotate(-3deg); }
+  50% { opacity: 0.8; transform: translateX(-50%) rotate(3deg); }
+}
+
+/* Artemis / Atalanta / Freya — moonlight: a silver glow + drifting stars. */
+.rn-pan-moon {
+  position: absolute;
+  top: 6%;
+  right: 7%;
+  width: 120px;
+  height: 120px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, hsl(var(--av-energy) / 0.28), transparent 68%);
+  animation: rn-pan-moon 8s ease-in-out infinite;
+}
+@keyframes rn-pan-moon {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+.rn-pan-stars span {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: hsl(var(--av-energy));
+  box-shadow: 0 0 6px 1px hsl(var(--av-energy) / 0.8);
+  animation: rn-pan-twinkle 3.5s ease-in-out infinite;
+}
+.rn-pan-stars span:nth-child(1) { top: 20%; left: 16%; animation-delay: 0s; }
+.rn-pan-stars span:nth-child(2) { top: 34%; left: 72%; animation-delay: 1.2s; }
+.rn-pan-stars span:nth-child(3) { top: 58%; left: 40%; animation-delay: 2s; }
+.rn-pan-stars span:nth-child(4) { top: 72%; left: 84%; animation-delay: 0.7s; }
+@keyframes rn-pan-twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.7); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+/* Aphrodite — petals falling. */
+.rn-pan-petals span {
+  position: absolute;
+  top: -16px;
+  width: 10px;
+  height: 8px;
+  border-radius: 60% 0 60% 0;
+  background: hsl(var(--primary) / 0.6);
+  opacity: 0;
+  animation: rn-pan-petal 8s linear infinite;
+}
+.rn-pan-petals span:nth-child(1) { left: 12%; animation-delay: 0s; }
+.rn-pan-petals span:nth-child(2) { left: 34%; animation-delay: 2.4s; }
+.rn-pan-petals span:nth-child(3) { left: 58%; animation-delay: 4s; }
+.rn-pan-petals span:nth-child(4) { left: 82%; animation-delay: 6s; }
+@keyframes rn-pan-petal {
+  0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.9; }
+  100% { transform: translateY(105vh) rotate(320deg); opacity: 0; }
+}
+
+/* Athena / Perseus / Odin / Brynhildr — wings: a soaring silhouette gliding by. */
+.rn-pan-wings {
+  position: absolute;
+  top: 14%;
+  left: -12%;
+  width: 46px;
+  height: 26px;
+  color: hsl(var(--foreground) / 0.5);
+  opacity: 0;
+  animation: rn-pan-soar 13s linear infinite;
+}
+.rn-pan-wings.rn-pan-wings-2 {
+  top: 30%;
+  width: 32px;
+  animation-duration: 17s;
+  animation-delay: 6s;
+}
+@keyframes rn-pan-soar {
+  0% { transform: translate(0, 0) scale(0.8); opacity: 0; }
+  12% { opacity: 0.8; }
+  50% { transform: translate(60vw, -14px) scale(1); }
+  88% { opacity: 0.7; }
+  100% { transform: translate(120vw, 6px) scale(1.05); opacity: 0; }
+}
+
+/* Heracles / Minotaur / Kronos — quake: rising dust + a periodic ground pulse. */
+.rn-pan-quake {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 -60px 60px -40px hsl(var(--primary) / 0.3);
+  animation: rn-pan-quake 5.5s ease-in-out infinite;
+}
+@keyframes rn-pan-quake {
+  0%, 86%, 100% { opacity: 0.5; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(1.5px); }
+  93% { transform: translateY(-1.5px); }
+  96% { transform: translateY(0.8px); }
+}
+.rn-pan-dust span {
+  position: absolute;
+  bottom: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: hsl(var(--primary) / 0.5);
+  opacity: 0;
+  animation: rn-pan-dust 5.5s ease-out infinite;
+}
+.rn-pan-dust span:nth-child(1) { left: 24%; animation-delay: 0.2s; }
+.rn-pan-dust span:nth-child(2) { left: 52%; animation-delay: 0.4s; }
+.rn-pan-dust span:nth-child(3) { left: 76%; animation-delay: 0.1s; }
+@keyframes rn-pan-dust {
+  0%, 86% { transform: translateY(0); opacity: 0; }
+  90% { opacity: 0.9; }
+  100% { transform: translateY(-40px); opacity: 0; }
+}
+
+/* Medusa — serpents writhing at the edges. */
+.rn-pan-serpents svg {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 70px;
+  color: hsl(var(--primary) / 0.4);
+  opacity: 0.6;
+}
+.rn-pan-serpents .rn-pan-serpent-l { left: 0; }
+.rn-pan-serpents .rn-pan-serpent-r { right: 0; transform: scaleX(-1); }
+.rn-pan-serpents svg path {
+  animation: rn-pan-writhe 6s ease-in-out infinite;
+}
+.rn-pan-serpents .rn-pan-serpent-r path { animation-delay: 1.5s; }
+@keyframes rn-pan-writhe {
+  0%, 100% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+}
+
+/* ── Respect reduced motion ─────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  [data-skin='pantheon'] .rn-canvas::after,
+  [data-skin='pantheon'] .rn-av-emblem,
+  [data-skin='pantheon'] .rn-av-card::after,
+  [data-skin='pantheon'] .rn-panel::before {
+    animation: none;
+    transition: none;
+  }
+  .rn-pan-fx {
+    display: none;
+  }
+}
+[data-reduced-motion='true'] [data-skin='pantheon'] .rn-canvas::after,
+[data-reduced-motion='true'] [data-skin='pantheon'] .rn-av-emblem {
+  animation: none;
+}
+[data-reduced-motion='true'] .rn-pan-fx {
+  display: none;
+}

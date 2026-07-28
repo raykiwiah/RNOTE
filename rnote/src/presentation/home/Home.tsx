@@ -15,6 +15,7 @@ import {
 import type { DocumentTreeNode } from '@application/dto';
 import { useWorkspace } from '../state/workspace';
 import { usePreferences } from '../state/preferences';
+import { isVariantSkin } from '../theme/variants';
 import { useLexicon, type LexKey } from '../theme/lexicon';
 import { OdysseusMark } from '../components/OdysseusMark';
 import { cue } from '../lib/sound';
@@ -76,9 +77,9 @@ export function Home(): JSX.Element {
           <h1 className="mt-1 flex items-center gap-2 font-display text-3xl font-bold tracking-tight text-foreground">
             <span className={mode === 'genz' ? 'rn-gradient-text' : undefined}>
               {t(greetingKey(now.getHours()))}
-              {/* Avengers greetings are complete character lines, so they stand
-                  alone; other skins personalise with the user's name. */}
-              {userName && skin !== 'avengers' && (
+              {/* Variant-skin greetings (Avengers character / Pantheon patron) are
+                  complete lines that stand alone; other skins add the user's name. */}
+              {userName && !isVariantSkin(skin) && (
                 <span className={mode === 'genz' ? undefined : 'text-primary'}>, {userName}</span>
               )}
             </span>

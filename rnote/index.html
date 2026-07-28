@@ -15,7 +15,7 @@
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-LHupxc2VHQkiYtKoSD6AgpXWFS5yroA80lv/FMMGmjM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; base-uri 'self'; object-src 'none'; form-action 'none'; upgrade-insecure-requests"
+      content="default-src 'self'; script-src 'self' 'sha256-JmSGuPilXWnvEXlHd/miXxXZlPsDe45CSfPr+M7vjps='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; base-uri 'self'; object-src 'none'; form-action 'none'; upgrade-insecure-requests"
     />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="color-scheme" content="light dark" />
@@ -50,9 +50,11 @@
           if (mode === 'genz' || mode === 'millennial') {
             root.setAttribute('data-mode', mode);
           }
-          if (skin === 'odysseus' || skin === 'default' || skin === 'avengers') {
-            // Avengers is a Gen Z–only atmosphere; fall back if the mode differs.
+          if (skin === 'odysseus' || skin === 'default' || skin === 'avengers' || skin === 'pantheon') {
+            // Mode-gated atmospheres fall back if the mode differs: Avengers is
+            // Gen Z only, Pantheon is Millennial only.
             if (skin === 'avengers' && mode !== 'genz') skin = 'default';
+            if (skin === 'pantheon' && mode !== 'millennial') skin = 'default';
             root.setAttribute('data-skin', skin);
           }
           if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {

@@ -18,9 +18,10 @@
  * See docs/THEMES.md for the full guide.
  */
 import type { LucideIcon } from 'lucide-react';
-import { Compass, Shield } from 'lucide-react';
+import { Compass, Shield, Landmark } from 'lucide-react';
 import type { ModeName, SkinName } from '../state/preferences';
 import { AVENGERS_CHARACTERS } from './avengersRoster';
+import { GREEK_CHARACTERS } from './greekRoster';
 
 export interface ThemeVariant {
   id: string;
@@ -58,6 +59,14 @@ export const THEMES: ThemeDescriptor[] = [
     icon: Shield,
     modes: ['genz'],
     variants: AVENGERS_CHARACTERS.map((c) => ({ id: c.id, label: c.name })),
+  },
+  {
+    id: 'pantheon',
+    label: 'Pantheon',
+    tagline: 'Gods, heroes and monsters of Greek & Norse myth — choose your patron.',
+    icon: Landmark,
+    modes: ['millennial'],
+    variants: GREEK_CHARACTERS.map((c) => ({ id: c.id, label: c.name })),
   },
 ];
 

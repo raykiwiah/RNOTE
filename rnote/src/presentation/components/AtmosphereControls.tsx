@@ -1,6 +1,6 @@
 import { usePreferences, type SkinName } from '../state/preferences';
 import { themesForMode, themeRequiresVariant } from '../theme/skins';
-import { emit, OPEN_AVENGERS_ROSTER_EVENT } from '../lib/events';
+import { emit, OPEN_VARIANT_ROSTER_EVENT } from '../lib/events';
 import { cn } from '../lib/cn';
 
 /**
@@ -17,7 +17,7 @@ export function AtmosphereControls(): JSX.Element {
 
   const select = (id: SkinName): void => {
     setSkin(id);
-    if (themeRequiresVariant(id)) emit(OPEN_AVENGERS_ROSTER_EVENT);
+    if (themeRequiresVariant(id)) emit(OPEN_VARIANT_ROSTER_EVENT);
   };
 
   return (

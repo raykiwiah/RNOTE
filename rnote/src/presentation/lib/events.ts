@@ -3,8 +3,8 @@ export const OPEN_TEMPLATES_EVENT = 'rnote:new-from-template';
 export const OPEN_CAPTURE_EVENT = 'rnote:quick-capture';
 export const OPEN_SEARCH_EVENT = 'rnote:open-search';
 export const OPEN_SETTINGS_EVENT = 'rnote:open-settings';
-/** Open the Avengers character picker (choosing a favourite Marvel character). */
-export const OPEN_AVENGERS_ROSTER_EVENT = 'rnote:open-avengers-roster';
+/** Open the variant-skin character picker (Avengers character / Pantheon patron). */
+export const OPEN_VARIANT_ROSTER_EVENT = 'rnote:open-variant-roster';
 
 export function emit(name: string): void {
   window.dispatchEvent(new Event(name));

@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import {
-  AV_TOKEN_KEYS,
-  AVENGERS_CHARACTER_IDS,
-  DEFAULT_CHARACTER_ID,
-  characterById,
-} from '../theme/avengersRoster';
+  VARIANT_TOKEN_KEYS,
+  ALL_VARIANT_IDS,
+  isVariantSkin,
+  variantCharacterById,
+  defaultVariantId,
+} from '../theme/variants';
 import { isThemeAvailable } from '../theme/skins';
 
 export type ThemeName = 'light' | 'dark';
@@ -13,11 +14,11 @@ export type ModeName = 'genz' | 'millennial';
  * A "skin" is a third, orthogonal presentation axis on top of theme + mode. It
  * re-imagines the entire atmosphere (palette, typography, textures, language)
  * without touching any feature. 'default' is the original app; 'odysseus' is the
- * cinematic Homeric voyage; 'avengers' is the Gen-Z-only Marvel skin whose exact
- * colours come from a chosen character (see `skinVariant`). Themes are described
- * in theme/skins.ts.
+ * cinematic Homeric voyage; 'avengers' (Gen Z only) and 'pantheon' (Millennial
+ * only) are "variant skins" whose exact colours come from a chosen character
+ * (see `skinVariant`). Themes are described in theme/skins.ts.
  */
-export type SkinName = 'default' | 'odysseus' | 'avengers';
+export type SkinName = 'default' | 'odysseus' | 'avengers' | 'pantheon';
 
 const THEME_KEY = 'rnote.theme';
 const MODE_KEY = 'rnote.mode';
@@ -64,7 +65,7 @@ function read<T extends string>(key: string, fallback: T, allowed: readonly T[])
 function readVariant(): string | null {
   try {
     const value = localStorage.getItem(SKIN_VARIANT_KEY);
-    return value && AVENGERS_CHARACTER_IDS.includes(value) ? value : null;
+    return value && ALL_VARIANT_IDS.includes(value) ? value : null;
   } catch {
     return null;
   }
@@ -90,14 +91,17 @@ function applyToDom(theme: ThemeName, mode: ModeName, skin: SkinName, variant: s
   root.setAttribute('data-mode', mode);
   root.setAttribute('data-skin', skin);
 
-  if (skin === 'avengers') {
-    const character = characterById(variant) ?? characterById(DEFAULT_CHARACTER_ID)!;
-    root.setAttribute('data-skin-variant', character.id);
-    for (const key of AV_TOKEN_KEYS) root.style.removeProperty(key);
-    for (const [key, value] of Object.entries(character.vars)) root.style.setProperty(key, value);
+  if (isVariantSkin(skin)) {
+    const character =
+      variantCharacterById(skin, variant) ?? variantCharacterById(skin, defaultVariantId(skin));
+    root.setAttribute('data-skin-variant', character?.id ?? '');
+    for (const key of VARIANT_TOKEN_KEYS) root.style.removeProperty(key);
+    if (character) {
+      for (const [key, value] of Object.entries(character.vars)) root.style.setProperty(key, value);
+    }
   } else {
     root.removeAttribute('data-skin-variant');
-    for (const key of AV_TOKEN_KEYS) root.style.removeProperty(key);
+    for (const key of VARIANT_TOKEN_KEYS) root.style.removeProperty(key);
   }
 }
 
@@ -114,7 +118,12 @@ const initialTheme = read<ThemeName>(THEME_KEY, systemPrefersDark() ? 'dark' : '
   'dark',
 ]);
 const initialMode = read<ModeName>(MODE_KEY, 'millennial', ['genz', 'millennial']);
-let initialSkin = read<SkinName>(SKIN_KEY, 'default', ['default', 'odysseus', 'avengers']);
+let initialSkin = read<SkinName>(SKIN_KEY, 'default', [
+  'default',
+  'odysseus',
+  'avengers',
+  'pantheon',
+]);
 // Enforce mode-gating up front (e.g. a stored Avengers skin under Millennial).
 if (!isThemeAvailable(initialSkin, initialMode)) initialSkin = 'default';
 const initialSkinVariant = readVariant();
@@ -186,9 +195,9 @@ export const usePreferences = create<PreferencesState>((set, get) => ({
     // If a skin needs a variant and none is chosen yet, seed a sensible default
     // so it never renders half-styled; the picker will refine it.
     let variant = get().skinVariant;
-    if (skin === 'avengers' && !characterById(variant)) {
-      variant = DEFAULT_CHARACTER_ID;
-      persist(SKIN_VARIANT_KEY, variant);
+    if (isVariantSkin(skin) && !variantCharacterById(skin, variant)) {
+      variant = defaultVariantId(skin) ?? null;
+      persist(SKIN_VARIANT_KEY, variant ?? '');
     }
     applyToDom(get().theme, get().mode, skin, variant);
     set({ skin, skinVariant: variant });

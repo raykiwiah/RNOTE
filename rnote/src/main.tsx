@@ -8,6 +8,7 @@ import './presentation/theme/tokens.css';
 import './presentation/theme/globals.css';
 import './presentation/theme/odysseus.css';
 import './presentation/theme/avengers.css';
+import './presentation/theme/pantheon.css';
 
 // If we're returning from an OpenRouter sign-in, swap the code for a key before
 // the UI settles (no-op on a normal load). Fire-and-forget; it updates state.

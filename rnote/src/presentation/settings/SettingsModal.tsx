@@ -27,10 +27,11 @@ import { useTour } from '../state/tour';
 import { usePreferences } from '../state/preferences';
 import { useSound } from '../state/sound';
 import { themesForMode, themeRequiresVariant } from '../theme/skins';
-import { characterById, DEFAULT_CHARACTER_ID } from '../theme/avengersRoster';
+import { isVariantSkin, variantCharacterById, defaultVariantId } from '../theme/variants';
+import type { SkinName } from '../state/preferences';
 import { AiConnection } from './AiConnection';
 import { cn } from '../lib/cn';
-import { emit, OPEN_AVENGERS_ROSTER_EVENT } from '../lib/events';
+import { emit, OPEN_VARIANT_ROSTER_EVENT } from '../lib/events';
 import { downloadFile, pickTextFile } from '../lib/files';
 import { markBackedUp } from '../lib/backupState';
 
@@ -139,7 +140,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
                     type="button"
                     onClick={() => {
                       setSkin(theme.id);
-                      if (themeRequiresVariant(theme.id)) emit(OPEN_AVENGERS_ROSTER_EVENT);
+                      if (themeRequiresVariant(theme.id)) emit(OPEN_VARIANT_ROSTER_EVENT);
                     }}
                     aria-pressed={skin === theme.id}
                     className={cn(
@@ -159,7 +160,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
               })}
             </div>
 
-            {skin === 'avengers' && <AvengersCharacterRow variant={skinVariant} />}
+            {isVariantSkin(skin) && <VariantCharacterRow skin={skin} variant={skinVariant} />}
             <label className="mt-1 flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
               <span className="flex min-w-0 items-center gap-2">
                 <Volume2 size={15} className="shrink-0 text-muted-foreground" />
@@ -465,13 +466,15 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
   );
 }
 
-/** The active Avengers character with a shortcut to reopen the picker. */
-function AvengersCharacterRow({ variant }: { variant: string | null }): JSX.Element {
-  const character = characterById(variant) ?? characterById(DEFAULT_CHARACTER_ID)!;
+/** The active variant character/patron with a shortcut to reopen the picker. */
+function VariantCharacterRow({ skin, variant }: { skin: SkinName; variant: string | null }): JSX.Element | null {
+  const character =
+    variantCharacterById(skin, variant) ?? variantCharacterById(skin, defaultVariantId(skin));
+  if (!character) return null;
   return (
     <button
       type="button"
-      onClick={() => emit(OPEN_AVENGERS_ROSTER_EVENT)}
+      onClick={() => emit(OPEN_VARIANT_ROSTER_EVENT)}
       className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5 text-left transition hover:bg-surface-hover"
     >
       <span className="flex min-w-0 items-center gap-2.5">

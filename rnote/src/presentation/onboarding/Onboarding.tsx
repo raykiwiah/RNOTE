@@ -6,7 +6,7 @@ import { usePreferences, type ModeName, type ThemeName, type SkinName } from '..
 import { useAiSettings } from '../state/aiSettings';
 import { useConnectivity } from '../state/connectivity';
 import { themesForMode, themeRequiresVariant, themeById } from '../theme/skins';
-import { emit, OPEN_AVENGERS_ROSTER_EVENT } from '../lib/events';
+import { emit, OPEN_VARIANT_ROSTER_EVENT } from '../lib/events';
 import { Button } from '../components/Button';
 import { cn } from '../lib/cn';
 import { TermsSheet, TermsDeclined } from './TermsSheet';
@@ -94,7 +94,7 @@ export function Onboarding(): JSX.Element {
   };
   const chooseSkin = (id: SkinName): void => {
     setSkin(id);
-    if (themeRequiresVariant(id)) emit(OPEN_AVENGERS_ROSTER_EVENT);
+    if (themeRequiresVariant(id)) emit(OPEN_VARIANT_ROSTER_EVENT);
   };
   const atmospheres = themesForMode(mode);
 
