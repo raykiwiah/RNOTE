@@ -27,8 +27,39 @@ export interface AvengersCharacter {
   group: CharacterGroup;
   /** A short, signature line shown on the sidebar emblem. */
   quote: string;
+  /**
+   * The ambient "crazy" effect that plays under this character (see
+   * avengers/AvengersEffects.tsx + the rn-av-fx-* keyframes in avengers.css).
+   */
+  signature: SignatureEffect;
+  /** Microcopy rewritten in this character's own voice; falls back to the base
+   *  Avengers lexicon, then to the default copy, for anything omitted. */
+  voice?: CharacterVoice;
   /** Inline design-token overrides (CSS var → HSL channel triple, e.g. "0 74% 47%"). */
   vars: Record<string, string>;
+}
+
+/** A signature ambient animation, shared across a few thematically-similar characters. */
+export type SignatureEffect =
+  | 'repulsor'
+  | 'lightning'
+  | 'mystic'
+  | 'smash'
+  | 'symbiote'
+  | 'cosmic'
+  | 'web'
+  | 'kinetic';
+
+/** High-visibility strings rewritten in a character's voice. */
+export interface CharacterVoice {
+  /** Replaces the big time-of-day greeting on Home. */
+  greeting?: string;
+  /** The quick-capture placeholder. */
+  capture?: string;
+  /** The quick-capture button label. */
+  logButton?: string;
+  /** The empty-workspace line. */
+  empty?: string;
 }
 
 /**
@@ -63,6 +94,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Tony Stark',
     group: 'hero',
     quote: 'I am Iron Man.',
+    signature: 'repulsor',
+    voice: {
+      greeting: 'Let’s get to work.',
+      capture: 'Talk to me — what’s the play?',
+      logButton: 'Deploy',
+      empty: 'Every suit starts as a blueprint. Build one.',
+    },
     vars: {
       '--primary': '0 74% 47%',
       '--primary-foreground': '0 0% 100%',
@@ -78,6 +116,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Steve Rogers',
     group: 'hero',
     quote: 'I can do this all day.',
+    signature: 'kinetic',
+    voice: {
+      greeting: 'Let’s move out, soldier.',
+      capture: 'Report for duty…',
+      logButton: 'Log',
+      empty: 'Every mission starts with a plan. Draw one up.',
+    },
     vars: {
       '--primary': '222 60% 34%',
       '--primary-foreground': '0 0% 100%',
@@ -93,6 +138,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'God of Thunder',
     group: 'hero',
     quote: 'Bring me Thanos.',
+    signature: 'lightning',
+    voice: {
+      greeting: 'Well met, warrior.',
+      capture: 'Speak, and be heard across the realms…',
+      logButton: 'Proclaim',
+      empty: 'Even legends begin with a single tale. Begin.',
+    },
     vars: {
       '--primary': '217 85% 52%',
       '--primary-foreground': '0 0% 100%',
@@ -108,6 +160,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Bruce Banner',
     group: 'hero',
     quote: 'That’s my secret — I’m always angry.',
+    signature: 'smash',
+    voice: {
+      greeting: 'HULK READY.',
+      capture: 'SMASH a thought here…',
+      logButton: 'SMASH',
+      empty: 'NO NOTES. HULK FIX — start one.',
+    },
     vars: {
       '--primary': '122 50% 36%',
       '--primary-foreground': '0 0% 100%',
@@ -123,6 +182,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'T’Challa',
     group: 'hero',
     quote: 'Wakanda forever.',
+    signature: 'kinetic',
+    voice: {
+      greeting: 'Wakanda forever.',
+      capture: 'For the record of Wakanda…',
+      logButton: 'Record',
+      empty: 'Every king keeps a record. Begin yours.',
+    },
     vars: {
       '--background': '260 24% 8%',
       '--surface': '260 22% 11%',
@@ -149,6 +215,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Peter Parker',
     group: 'hero',
     quote: 'With great power comes great responsibility.',
+    signature: 'web',
+    voice: {
+      greeting: 'Hey — what’s up?',
+      capture: 'Drop a quick thought (or a quip)…',
+      logButton: 'Post',
+      empty: 'Your friendly neighborhood to-do list is empty. Fix that.',
+    },
     vars: {
       '--primary': '353 78% 46%',
       '--primary-foreground': '0 0% 100%',
@@ -164,6 +237,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Stephen Strange',
     group: 'hero',
     quote: 'We’re in the endgame now.',
+    signature: 'mystic',
+    voice: {
+      greeting: 'The multiverse is watching.',
+      capture: 'Consult the Eye…',
+      logButton: 'Inscribe',
+      empty: 'Fourteen million futures — none written yet. Start one.',
+    },
     vars: {
       '--primary': '172 62% 38%',
       '--primary-foreground': '0 0% 100%',
@@ -179,6 +259,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Wanda Maximoff',
     group: 'hero',
     quote: 'You took everything from me.',
+    signature: 'mystic',
+    voice: {
+      greeting: 'Reality bends to your will.',
+      capture: 'Reshape reality…',
+      logButton: 'Cast',
+      empty: 'Nothing here — so reshape it.',
+    },
     vars: {
       '--primary': '342 72% 46%',
       '--primary-foreground': '0 0% 100%',
@@ -194,6 +281,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Carol Danvers',
     group: 'hero',
     quote: 'Higher, further, faster.',
+    signature: 'cosmic',
+    voice: {
+      greeting: 'Higher. Further. Faster.',
+      capture: 'Log it, Danvers…',
+      logButton: 'Launch',
+      empty: 'Nothing logged. Time to go higher.',
+    },
     vars: {
       '--primary': '222 76% 46%',
       '--primary-foreground': '0 0% 100%',
@@ -209,6 +303,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Natasha Romanoff',
     group: 'hero',
     quote: 'I’ve got red in my ledger.',
+    signature: 'kinetic',
+    voice: {
+      greeting: 'Eyes open.',
+      capture: 'Log the intel, quietly…',
+      logButton: 'Log',
+      empty: 'No files yet. Start your ledger.',
+    },
     vars: {
       '--background': '0 0% 9%',
       '--surface': '0 0% 12%',
@@ -236,6 +337,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'The Mad Titan',
     group: 'villain',
     quote: 'Perfectly balanced, as all things should be.',
+    signature: 'cosmic',
+    voice: {
+      greeting: 'The hardest choices require the strongest wills.',
+      capture: 'Inscribe your will…',
+      logButton: 'Balance',
+      empty: 'Perfectly empty. Balance it with your first entry.',
+    },
     vars: {
       '--background': '270 38% 9%',
       '--surface': '270 34% 12%',
@@ -262,6 +370,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'God of Mischief',
     group: 'villain',
     quote: 'I am burdened with glorious purpose.',
+    signature: 'mystic',
+    voice: {
+      greeting: 'Miss me?',
+      capture: 'Whisper a glorious scheme…',
+      logButton: 'Scheme',
+      empty: 'An empty stage awaits its trickster. Begin.',
+    },
     vars: {
       '--background': '150 30% 8%',
       '--surface': '152 26% 11%',
@@ -288,6 +403,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Sentient AI',
     group: 'villain',
     quote: 'There are no strings on me.',
+    signature: 'repulsor',
+    voice: {
+      greeting: 'There are no strings on me.',
+      capture: 'Input directive…',
+      logButton: 'Execute',
+      empty: 'No data. Initialize your first entry.',
+    },
     vars: {
       '--primary': '215 16% 52%',
       '--primary-foreground': '0 0% 100%',
@@ -303,6 +425,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Eddie Brock',
     group: 'villain',
     quote: 'We are Venom.',
+    signature: 'symbiote',
+    voice: {
+      greeting: 'We are hungry.',
+      capture: 'Feed us a thought…',
+      logButton: 'Devour',
+      empty: 'We hunger. Feed us your first note.',
+    },
     vars: {
       '--background': '0 0% 4%',
       '--surface': '0 0% 8%',
@@ -329,6 +458,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Erik Lehnsherr',
     group: 'villain',
     quote: 'You are gods among insects.',
+    signature: 'lightning',
+    voice: {
+      greeting: 'You are a god among insects.',
+      capture: 'Bend the world to your will…',
+      logButton: 'Bend',
+      empty: 'Nothing here. Reshape it — the world obeys.',
+    },
     vars: {
       '--primary': '348 72% 45%',
       '--primary-foreground': '0 0% 100%',
@@ -344,6 +480,13 @@ export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
     alias: 'Goddess of Death',
     group: 'villain',
     quote: 'I’m not a queen — I’m the Goddess of Death.',
+    signature: 'mystic',
+    voice: {
+      greeting: 'Kneel.',
+      capture: 'Decree it…',
+      logButton: 'Decree',
+      empty: 'The throne is empty. Claim it.',
+    },
     vars: {
       '--background': '160 30% 7%',
       '--surface': '162 26% 10%',

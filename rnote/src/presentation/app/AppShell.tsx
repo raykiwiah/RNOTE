@@ -12,6 +12,7 @@ import { Celebration } from '../gamification/Celebration';
 import { ConnectivityToast } from './ConnectivityToast';
 import { AiConnectToast } from './AiConnectToast';
 import { ProductTour } from '../tour/ProductTour';
+import { AvengersEffects } from '../avengers/AvengersEffects';
 import { useWorkspace } from '../state/workspace';
 import { useViewMode } from '../state/viewMode';
 import { useCalendar } from '../state/calendar';
@@ -296,6 +297,7 @@ export function AppShell(): JSX.Element {
       <ConnectivityToast />
       <AiConnectToast />
       <ProductTour />
+      <AvengersEffects />
       <span className="rn-shooting-star" aria-hidden />
     </div>
     </MotionConfig>
