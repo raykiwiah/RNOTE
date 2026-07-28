@@ -23,6 +23,8 @@ import {
   FilePlus,
   Wind,
   FlaskConical,
+  ScrollText,
+  Flame,
 } from 'lucide-react';
 import { useWorkspace } from '../state/workspace';
 import { usePreferences } from '../state/preferences';
@@ -35,8 +37,9 @@ import { ThemeModeControls } from '../components/ThemeModeControls';
 import { ConnectivityControls } from '../components/ConnectivityControls';
 import { AtmosphereControls } from '../components/AtmosphereControls';
 import { OdysseusVoyagePanel } from '../components/OdysseusVoyagePanel';
-import { AvengersEmblemPanel } from '../components/AvengersEmblemPanel';
+import { VariantEmblemPanel } from '../components/VariantEmblemPanel';
 import { characterHomeIcon } from '../avengers/characterIcons';
+import { pantheonHomeIcon } from '../pantheon/characterIcons';
 import { cn } from '../lib/cn';
 import { modLabel } from '../lib/platform';
 import { emit, OPEN_SETTINGS_EVENT } from '../lib/events';
@@ -65,17 +68,24 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
   const [trashOpen, setTrashOpen] = useState(false);
   const t = useLexicon();
 
-  // Each skin re-symbolises the nav: Odysseus → mythology, Avengers → mission ops.
+  // Each skin re-symbolises the nav: Odysseus → mythology, Avengers → mission
+  // ops, Pantheon → temple rites. Home wears the chosen patron's/character's icon.
   const ody = skin === 'odysseus';
   const avg = skin === 'avengers';
-  // Under Avengers, Home wears the chosen character's signature icon.
-  const IHome = avg ? (characterHomeIcon(skinVariant) ?? Building2) : ody ? Anchor : HomeIcon;
-  const IToday = avg ? ClipboardList : ody ? Sun : CalendarDays;
-  const ITime = avg ? Hourglass : ody ? Compass : History;
-  const ISearch = avg ? Radar : ody ? Telescope : Search;
-  const INew = avg ? FilePlus : ody ? Feather : Plus;
-  const ITrash = avg ? Wind : ody ? Skull : Trash2;
-  const ISettings = avg ? FlaskConical : ody ? Landmark : Settings;
+  const pan = skin === 'pantheon';
+  const IHome = pan
+    ? (pantheonHomeIcon(skinVariant) ?? Landmark)
+    : avg
+      ? (characterHomeIcon(skinVariant) ?? Building2)
+      : ody
+        ? Anchor
+        : HomeIcon;
+  const IToday = pan ? ScrollText : avg ? ClipboardList : ody ? Sun : CalendarDays;
+  const ITime = pan ? Hourglass : avg ? Hourglass : ody ? Compass : History;
+  const ISearch = pan ? Sparkles : avg ? Radar : ody ? Telescope : Search;
+  const INew = pan ? Feather : avg ? FilePlus : ody ? Feather : Plus;
+  const ITrash = pan ? Flame : avg ? Wind : ody ? Skull : Trash2;
+  const ISettings = pan ? Landmark : avg ? FlaskConical : ody ? Landmark : Settings;
 
   // The workspace stance, shown as a tiny live chip next to the presentation mode.
   const conn =
@@ -181,7 +191,7 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
 
         {/* Fills the quiet stretch of the sidebar with a skin-specific flourish. */}
         {ody && <OdysseusVoyagePanel />}
-        {avg && <AvengersEmblemPanel />}
+        {(avg || pan) && <VariantEmblemPanel />}
       </div>
 
       <div className="border-t border-border p-2">

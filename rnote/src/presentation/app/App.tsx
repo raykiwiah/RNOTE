@@ -3,7 +3,7 @@ import { usePreferences } from '../state/preferences';
 import { useWorkspace } from '../state/workspace';
 import { TERMS_VERSION } from '../onboarding/terms';
 import { AppShell } from './AppShell';
-import { AvengersRoster } from '../avengers/AvengersRoster';
+import { VariantRoster } from '../components/VariantRoster';
 import { Spinner } from '../components/Spinner';
 
 // Onboarding is shown only on first run, so it is loaded on demand.
@@ -35,12 +35,13 @@ export function App(): JSX.Element {
     return <AppShell />;
   })();
 
-  // The Avengers character picker lives at the root so it can be opened from
-  // onboarding, the sidebar, or settings alike (it self-manages via an event).
+  // The variant-skin picker (Avengers character / Pantheon patron) lives at the
+  // root so it can be opened from onboarding, the sidebar, or settings alike (it
+  // self-manages via an event).
   return (
     <>
       {content}
-      <AvengersRoster />
+      <VariantRoster />
     </>
   );
 }

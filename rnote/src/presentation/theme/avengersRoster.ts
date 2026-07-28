@@ -17,74 +17,15 @@
  * --accent (shadows, gradients) follows automatically.
  */
 
+import type { VariantCharacter } from './variantTypes';
+
+// Avengers characters are variant characters; the shared type + token keys live
+// in variantTypes.ts so the Pantheon skin can reuse them. Re-exported here for
+// the existing Avengers imports.
+export type AvengersCharacter = VariantCharacter;
 export type CharacterGroup = 'hero' | 'villain';
-
-export interface AvengersCharacter {
-  id: string;
-  name: string;
-  /** Civilian / true name, shown as a subtitle in the picker. */
-  alias: string;
-  group: CharacterGroup;
-  /** A short, signature line shown on the sidebar emblem. */
-  quote: string;
-  /**
-   * The ambient "crazy" effect that plays under this character (see
-   * avengers/AvengersEffects.tsx + the rn-av-fx-* keyframes in avengers.css).
-   */
-  signature: SignatureEffect;
-  /** Microcopy rewritten in this character's own voice; falls back to the base
-   *  Avengers lexicon, then to the default copy, for anything omitted. */
-  voice?: CharacterVoice;
-  /** Inline design-token overrides (CSS var → HSL channel triple, e.g. "0 74% 47%"). */
-  vars: Record<string, string>;
-}
-
-/** A signature ambient animation, shared across a few thematically-similar characters. */
-export type SignatureEffect =
-  | 'repulsor'
-  | 'lightning'
-  | 'mystic'
-  | 'smash'
-  | 'symbiote'
-  | 'cosmic'
-  | 'web'
-  | 'kinetic';
-
-/** High-visibility strings rewritten in a character's voice. */
-export interface CharacterVoice {
-  /** Replaces the big time-of-day greeting on Home. */
-  greeting?: string;
-  /** The quick-capture placeholder. */
-  capture?: string;
-  /** The quick-capture button label. */
-  logButton?: string;
-  /** The empty-workspace line. */
-  empty?: string;
-}
-
-/**
- * Every token key any character may override — the superset cleared from :root
- * when leaving the Avengers skin, so switching away never leaves colour behind.
- */
-export const AV_TOKEN_KEYS = [
-  '--primary',
-  '--primary-foreground',
-  '--accent',
-  '--accent-foreground',
-  '--ring',
-  '--av-energy',
-  '--background',
-  '--surface',
-  '--surface-hover',
-  '--elevated',
-  '--overlay',
-  '--foreground',
-  '--muted',
-  '--muted-foreground',
-  '--subtle',
-  '--border',
-  '--border-strong',
-] as const;
+export type { CharacterVoice } from './variantTypes';
+export { VARIANT_TOKEN_KEYS as AV_TOKEN_KEYS } from './variantTypes';
 
 export const AVENGERS_CHARACTERS: AvengersCharacter[] = [
   // ── Heroes ──────────────────────────────────────────────────────────────────

@@ -8,8 +8,8 @@ behaviour — switching is instant and purely presentational.
 | --- | --- | --- | --- |
 | Theme | `data-theme` | `light` \| `dark` | user / system |
 | Mode | `data-mode` | `millennial` \| `genz` | user (personality) |
-| **Skin** | `data-skin` | `default` \| `odysseus` \| `avengers` | user (atmosphere) |
-| **Variant** | `data-skin-variant` | a skin-specific id (e.g. an Avengers character) | user |
+| **Skin** | `data-skin` | `default` \| `odysseus` \| `avengers` \| `pantheon` | user (atmosphere) |
+| **Variant** | `data-skin-variant` | a skin-specific id (an Avengers character / a Pantheon patron) | user |
 
 Theme + Mode are the base design tokens (`theme/tokens.css`). A **skin** is an
 optional atmosphere layered on top that re-imagines palette, typography,
@@ -25,7 +25,9 @@ theme/tokens.css      Base tokens per theme×mode (HSL channel triples)
 theme/skins.ts        Registry: every atmosphere, its availability + variants
 theme/<skin>.css      A skin's token overrides + flair (scoped to [data-skin='…'])
 theme/lexicon.ts      Skin-aware microcopy (default required, per-skin optional)
-theme/avengersRoster.ts  Avengers variant palettes as data (applied as inline vars)
+theme/variantTypes.ts Shared VariantCharacter type + the token-key superset
+theme/<skin>Roster.ts Variant palettes/voice as data (avengersRoster, greekRoster)
+theme/variants.ts     Generic registry for variant skins (roster/default/groups)
 state/preferences.ts  Holds skin + skinVariant, applies everything to <html>
 ```
 
@@ -77,22 +79,33 @@ overrides a small set of **accent** design tokens as data; everything derived
 (`--shadow-glow`, gradients) follows automatically because it references
 `var(--primary)`/`var(--accent)`.
 
-1. **Model the variants as data.** See `theme/avengersRoster.ts`: each entry has
-   an id, label and a `vars` map of `CSS custom property → HSL channel triple`
-   (e.g. `'--primary': '0 74% 47%'`). "Mood" variants may also override the
-   structural tokens (`--background`, `--surface`, `--foreground`, …) to commit
-   to a backdrop; the rest just recolour accents on the skin's base canvas.
-2. **Keep the clear-set complete.** `AV_TOKEN_KEYS` must be the superset of every
-   key any variant sets — `applyToDom` clears it before applying a variant, so
-   switching never leaves colour behind (a test enforces this).
-3. **Give the skin base CSS** (`theme/avengers.css`) the neutral canvas + flair
-   that the variant colours ride on, using the CSS variables. A pre-hydration
-   fallback (e.g. a base `--av-energy`) avoids an un-styled first paint.
-4. **Declare `variants`** on the descriptor (derive them from the roster so
-   there's one source of truth), which makes `themeRequiresVariant()` true.
-5. **Provide a picker.** `avengers/AvengersRoster.tsx` opens on the
-   `OPEN_AVENGERS_ROSTER_EVENT` event; the atmosphere switch / onboarding /
-   settings emit it when a variant-skin is chosen. Selecting applies live.
+The variant system is generic (see `theme/variants.ts`): the store's palette
+application, the lexicon's per-character voice, and the shared picker
+(`components/VariantRoster.tsx`) / emblem panel (`components/VariantEmblemPanel.tsx`)
+are all skin-agnostic. Avengers and Pantheon are the two variant skins today;
+a third is a roster file plus one registry entry.
+
+1. **Model the variants as data.** See `theme/avengersRoster.ts` /
+   `theme/greekRoster.ts`: each entry (a `VariantCharacter` from
+   `theme/variantTypes.ts`) has an id, name, alias, `group`, `signature`,
+   optional `voice`, and a `vars` map of `CSS custom property → HSL channel
+   triple` (e.g. `'--primary': '0 74% 47%'`). "Mood" variants may also override
+   the structural tokens (`--background`, `--surface`, …) to commit to a
+   backdrop; the rest just recolour accents on the skin's base canvas.
+2. **Keep the clear-set complete.** `VARIANT_TOKEN_KEYS` must be the superset of
+   every key any variant sets — `applyToDom` clears it before applying a variant,
+   so switching never leaves colour behind (a test enforces this).
+3. **Give the skin base CSS** (`theme/<skin>.css`) the neutral canvas + flair the
+   variant colours ride on, using the CSS variables. A pre-hydration fallback
+   (e.g. a base `--av-energy`) avoids an un-styled first paint.
+4. **Register it** in `theme/variants.ts` (roster, default id, picker groups +
+   copy) and add a `ThemeDescriptor` in `skins.ts` whose `variants` derive from
+   the roster — which makes `themeRequiresVariant()` true.
+5. **Art is per-skin, selection is generic.** Provide an emblem component and an
+   effects component for the skin (see `avengers/` and `pantheon/`); the shared
+   `VariantRoster` opens on `OPEN_VARIANT_ROSTER_EVENT` and reads the active
+   skin's config, so the atmosphere switch / onboarding / settings need no
+   changes. Selecting applies live.
 
 ## Boot script + CSP
 

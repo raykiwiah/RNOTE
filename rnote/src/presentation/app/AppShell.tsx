@@ -13,6 +13,7 @@ import { ConnectivityToast } from './ConnectivityToast';
 import { AiConnectToast } from './AiConnectToast';
 import { ProductTour } from '../tour/ProductTour';
 import { AvengersEffects } from '../avengers/AvengersEffects';
+import { PantheonEffects } from '../pantheon/PantheonEffects';
 import { useWorkspace } from '../state/workspace';
 import { useViewMode } from '../state/viewMode';
 import { useCalendar } from '../state/calendar';
@@ -298,6 +299,7 @@ export function AppShell(): JSX.Element {
       <AiConnectToast />
       <ProductTour />
       <AvengersEffects />
+      <PantheonEffects />
       <span className="rn-shooting-star" aria-hidden />
     </div>
     </MotionConfig>

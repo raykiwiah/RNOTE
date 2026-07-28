@@ -1,17 +1,21 @@
 import { usePreferences } from '../state/preferences';
-import { characterById, DEFAULT_CHARACTER_ID } from '../theme/avengersRoster';
+import { isVariantSkin, variantCharacterById, defaultVariantId } from '../theme/variants';
 import { AvengersEmblem } from '../avengers/AvengersEmblem';
+import { GreekEmblem } from '../pantheon/GreekEmblem';
 
 /**
- * Fills the quiet stretch of the sidebar under the Avengers skin with the chosen
- * character's own insignia, name and signature line — so the pick is felt
- * throughout (the Avengers counterpart of the Odysseus ship). Each character has
- * a unique emblem (see AvengersEmblem). Only rendered under the Avengers skin;
- * motion lives in avengers.css and is dropped under prefers-reduced-motion.
+ * Fills the quiet stretch of the sidebar under a variant skin with the chosen
+ * character's own insignia, name and signature line — the Avengers/Pantheon
+ * counterpart of the Odysseus ship. The emblem art is skin-specific; the frame,
+ * pulse and hover sheen (rn-av-* classes) are shared and re-styled per skin in
+ * each theme's CSS. Only rendered under a variant skin.
  */
-export function AvengersEmblemPanel(): JSX.Element | null {
+export function VariantEmblemPanel(): JSX.Element | null {
+  const skin = usePreferences((s) => s.skin);
   const variant = usePreferences((s) => s.skinVariant);
-  const character = characterById(variant) ?? characterById(DEFAULT_CHARACTER_ID);
+  if (!isVariantSkin(skin)) return null;
+  const character =
+    variantCharacterById(skin, variant) ?? variantCharacterById(skin, defaultVariantId(skin));
   if (!character) return null;
 
   return (
@@ -28,7 +32,11 @@ export function AvengersEmblemPanel(): JSX.Element | null {
               <path d="M64 36h5" />
             </g>
           </svg>
-          <AvengersEmblem characterId={character.id} size={44} className="relative" />
+          {skin === 'pantheon' ? (
+            <GreekEmblem characterId={character.id} size={44} className="relative" />
+          ) : (
+            <AvengersEmblem characterId={character.id} size={44} className="relative" />
+          )}
         </div>
         <div className="font-display text-sm font-bold text-foreground">{character.name}</div>
         <div className="text-[11px] text-muted-foreground">{character.alias}</div>

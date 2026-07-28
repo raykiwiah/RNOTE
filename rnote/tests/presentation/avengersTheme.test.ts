@@ -31,13 +31,15 @@ function resetPrefs(): void {
 }
 
 describe('theme registry (skins.ts)', () => {
-  it('exposes the three known themes', () => {
-    expect(THEMES.map((t) => t.id)).toEqual(['default', 'odysseus', 'avengers']);
+  it('exposes the known themes', () => {
+    expect(THEMES.map((t) => t.id)).toEqual(['default', 'odysseus', 'avengers', 'pantheon']);
   });
 
-  it('gates Avengers to Gen Z only; Default and Odysseus are universal', () => {
+  it('gates Avengers to Gen Z and Pantheon to Millennial; Default/Odysseus universal', () => {
     expect(isThemeAvailable('avengers', 'genz')).toBe(true);
     expect(isThemeAvailable('avengers', 'millennial')).toBe(false);
+    expect(isThemeAvailable('pantheon', 'millennial')).toBe(true);
+    expect(isThemeAvailable('pantheon', 'genz')).toBe(false);
     for (const mode of ['genz', 'millennial'] as const) {
       expect(isThemeAvailable('default', mode)).toBe(true);
       expect(isThemeAvailable('odysseus', mode)).toBe(true);
@@ -46,6 +48,8 @@ describe('theme registry (skins.ts)', () => {
 
   it('themesForMode reflects the gating', () => {
     expect(themesForMode('genz').map((t) => t.id)).toContain('avengers');
+    expect(themesForMode('genz').map((t) => t.id)).not.toContain('pantheon');
+    expect(themesForMode('millennial').map((t) => t.id)).toContain('pantheon');
     expect(themesForMode('millennial').map((t) => t.id)).not.toContain('avengers');
   });
 
