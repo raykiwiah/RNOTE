@@ -3,6 +3,7 @@ import { usePreferences } from '../state/preferences';
 import { useWorkspace } from '../state/workspace';
 import { TERMS_VERSION } from '../onboarding/terms';
 import { AppShell } from './AppShell';
+import { AvengersRoster } from '../avengers/AvengersRoster';
 import { Spinner } from '../components/Spinner';
 
 // Onboarding is shown only on first run, so it is loaded on demand.
@@ -22,15 +23,26 @@ export function App(): JSX.Element {
 
   // First run — or an existing user who hasn't accepted the current Terms — is
   // routed through onboarding, which ends at the Terms gate.
-  if (!onboarded || !termsAccepted) {
-    return (
-      <Suspense fallback={<BootScreen />}>
-        <Onboarding />
-      </Suspense>
-    );
-  }
-  if (status !== 'ready') return <BootScreen />;
-  return <AppShell />;
+  const content = ((): JSX.Element => {
+    if (!onboarded || !termsAccepted) {
+      return (
+        <Suspense fallback={<BootScreen />}>
+          <Onboarding />
+        </Suspense>
+      );
+    }
+    if (status !== 'ready') return <BootScreen />;
+    return <AppShell />;
+  })();
+
+  // The Avengers character picker lives at the root so it can be opened from
+  // onboarding, the sidebar, or settings alike (it self-manages via an event).
+  return (
+    <>
+      {content}
+      <AvengersRoster />
+    </>
+  );
 }
 
 function BootScreen(): JSX.Element {

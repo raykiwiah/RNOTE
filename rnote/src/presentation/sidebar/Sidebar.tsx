@@ -16,6 +16,13 @@ import {
   Feather,
   Skull,
   Landmark,
+  Building2,
+  ClipboardList,
+  Hourglass,
+  Radar,
+  FilePlus,
+  Wind,
+  FlaskConical,
 } from 'lucide-react';
 import { useWorkspace } from '../state/workspace';
 import { usePreferences } from '../state/preferences';
@@ -28,6 +35,7 @@ import { ThemeModeControls } from '../components/ThemeModeControls';
 import { ConnectivityControls } from '../components/ConnectivityControls';
 import { AtmosphereControls } from '../components/AtmosphereControls';
 import { OdysseusVoyagePanel } from '../components/OdysseusVoyagePanel';
+import { AvengersEmblemPanel } from '../components/AvengersEmblemPanel';
 import { cn } from '../lib/cn';
 import { modLabel } from '../lib/platform';
 import { emit, OPEN_SETTINGS_EVENT } from '../lib/events';
@@ -55,15 +63,16 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
   const [trashOpen, setTrashOpen] = useState(false);
   const t = useLexicon();
 
-  // Under Odysseus, generic icons become refined mythology symbols.
+  // Each skin re-symbolises the nav: Odysseus → mythology, Avengers → mission ops.
   const ody = skin === 'odysseus';
-  const IHome = ody ? Anchor : HomeIcon;
-  const IToday = ody ? Sun : CalendarDays;
-  const ITime = ody ? Compass : History;
-  const ISearch = ody ? Telescope : Search;
-  const INew = ody ? Feather : Plus;
-  const ITrash = ody ? Skull : Trash2;
-  const ISettings = ody ? Landmark : Settings;
+  const avg = skin === 'avengers';
+  const IHome = avg ? Building2 : ody ? Anchor : HomeIcon;
+  const IToday = avg ? ClipboardList : ody ? Sun : CalendarDays;
+  const ITime = avg ? Hourglass : ody ? Compass : History;
+  const ISearch = avg ? Radar : ody ? Telescope : Search;
+  const INew = avg ? FilePlus : ody ? Feather : Plus;
+  const ITrash = avg ? Wind : ody ? Skull : Trash2;
+  const ISettings = avg ? FlaskConical : ody ? Landmark : Settings;
 
   // The workspace stance, shown as a tiny live chip next to the presentation mode.
   const conn =
@@ -167,8 +176,9 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
           )}
         </nav>
 
-        {/* Fills the quiet stretch of the sidebar with an Odyssey sea-chart. */}
+        {/* Fills the quiet stretch of the sidebar with a skin-specific flourish. */}
         {ody && <OdysseusVoyagePanel />}
+        {avg && <AvengersEmblemPanel />}
       </div>
 
       <div className="border-t border-border p-2">

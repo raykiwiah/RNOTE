@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Briefcase, Sun, Moon, ArrowRight, Check, Wand2, ShieldCheck, CloudOff, Wifi, Compass } from 'lucide-react';
+import { Sparkles, Briefcase, Sun, Moon, ArrowRight, Check, Wand2, ShieldCheck, CloudOff, Wifi } from 'lucide-react';
 import type { ConnectivityPreference } from '@domain/connectivity';
 import { usePreferences, type ModeName, type ThemeName, type SkinName } from '../state/preferences';
 import { useAiSettings } from '../state/aiSettings';
 import { useConnectivity } from '../state/connectivity';
+import { themesForMode, themeRequiresVariant, themeById } from '../theme/skins';
+import { emit, OPEN_AVENGERS_ROSTER_EVENT } from '../lib/events';
 import { Button } from '../components/Button';
 import { cn } from '../lib/cn';
 import { TermsSheet, TermsDeclined } from './TermsSheet';
@@ -90,6 +92,11 @@ export function Onboarding(): JSX.Element {
     setLocalTheme(t);
     setTheme(t);
   };
+  const chooseSkin = (id: SkinName): void => {
+    setSkin(id);
+    if (themeRequiresVariant(id)) emit(OPEN_AVENGERS_ROSTER_EVENT);
+  };
+  const atmospheres = themesForMode(mode);
 
   return (
     <div className="rn-canvas h-[100dvh] overflow-y-auto bg-background">
@@ -219,36 +226,35 @@ export function Onboarding(): JSX.Element {
           </div>
         </div>
 
-        {/* Atmosphere — the optional Odysseus voyage (changeable anytime). */}
+        {/* Atmosphere — optional skins that restyle everything (never the data). */}
         <div className="mb-2 flex items-center justify-center gap-3">
           <span className="text-sm text-muted-foreground">Atmosphere</span>
-          <div className="flex items-center rounded-lg border border-border bg-surface p-0.5">
-            {(
-              [
-                { id: 'default' as SkinName, label: 'Default' },
-                { id: 'odysseus' as SkinName, label: 'Odysseus' },
-              ]
-            ).map((sk) => (
-              <button
-                key={sk.id}
-                type="button"
-                onClick={() => setSkin(sk.id)}
-                className={cn(
-                  'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors',
-                  skin === sk.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {sk.id === 'odysseus' && <Compass size={14} />}
-                {sk.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center justify-center rounded-lg border border-border bg-surface p-0.5">
+            {atmospheres.map((theme) => {
+              const Icon = theme.icon;
+              return (
+                <button
+                  key={theme.id}
+                  type="button"
+                  onClick={() => chooseSkin(theme.id)}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm transition-colors',
+                    skin === theme.id
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  {Icon && <Icon size={14} />}
+                  {theme.label}
+                </button>
+              );
+            })}
           </div>
         </div>
         <p className="mb-4 text-center text-xs text-subtle sm:mb-6">
-          Odysseus reimagines RNOTE as a cinematic voyage — deep navy, bronze and constellations.
-          Change it anytime.
+          {skin === 'default'
+            ? 'Optional atmospheres restyle everything — never your data. Change anytime.'
+            : themeById(skin).tagline}
         </p>
 
         {/* Connectivity — the privacy stance, chosen up front (changeable anytime). */}

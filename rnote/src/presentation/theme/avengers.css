@@ -1,0 +1,194 @@
+/**
+ * ── The Avengers skin ─────────────────────────────────────────────────────────
+ * A Gen-Z-only atmosphere: bold, cinematic, comic-book energy. The exact palette
+ * is supplied by the chosen character as inline custom properties on :root (see
+ * theme/avengersRoster.ts), so this file only provides the neutral comic-panel
+ * canvas + flair those signature colours ride on. Everything below is scoped to
+ * [data-skin='avengers'] so the 'default' and 'odysseus' skins are untouched,
+ * and both palette blocks mirror the Gen Z token specificity so they win by
+ * source order. All motion respects prefers-reduced-motion.
+ */
+
+/* ── Base structure · Light ─────────────────────────────────────────────────── */
+[data-skin='avengers'] {
+  --background: 220 20% 98%;
+  --surface: 0 0% 100%;
+  --surface-hover: 220 16% 95%;
+  --elevated: 0 0% 100%;
+  --overlay: 222 30% 8%;
+
+  --foreground: 222 24% 12%;
+  --muted: 220 16% 95%;
+  --muted-foreground: 220 10% 42%;
+  --subtle: 220 10% 56%;
+
+  --border: 220 16% 88%;
+  --border-strong: 220 14% 78%;
+
+  /* --primary / --accent / --primary-foreground / --accent-foreground / --ring /
+     --av-energy all arrive from the character (inline vars). This is only the
+     pre-hydration fallback aura so a first paint is never un-styled. */
+  --av-energy: 0 74% 50%;
+
+  --radius: 14px;
+  --font-display: 'SF Pro Rounded', ui-rounded, 'Hiragino Maru Gothic ProN', var(--font-sans);
+
+  --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.16), 0 8px 30px hsl(var(--primary) / 0.26);
+  --gradient-hero: linear-gradient(
+    135deg,
+    hsl(var(--primary) / 0.2),
+    hsl(var(--accent) / 0.14) 55%,
+    hsl(var(--av-energy) / 0.1)
+  );
+  --gradient-card: linear-gradient(135deg, hsl(var(--primary) / 0.14), hsl(var(--accent) / 0.08));
+}
+
+/* ── Base structure · Dark ──────────────────────────────────────────────────── */
+[data-skin='avengers'][data-theme='dark'] {
+  --background: 222 30% 7%;
+  --surface: 222 26% 10%;
+  --surface-hover: 222 22% 15%;
+  --elevated: 222 26% 12%;
+  --overlay: 222 45% 2%;
+
+  --foreground: 220 20% 94%;
+  --muted: 222 20% 16%;
+  --muted-foreground: 220 12% 64%;
+  --subtle: 220 10% 50%;
+
+  --border: 222 20% 20%;
+  --border-strong: 222 20% 30%;
+
+  --shadow-glow: 0 0 0 1px hsl(var(--primary) / 0.24), 0 10px 40px hsl(var(--primary) / 0.34);
+}
+
+/* ── Energy field: corner auras in the character's colours + comic halftone ──── */
+[data-skin='avengers'] .rn-canvas {
+  position: relative;
+  /* Own stacking context so decorative layers sit behind content without a
+     z-index on every child — and without disturbing fixed elements. */
+  isolation: isolate;
+  background-color: hsl(var(--background));
+  background-image:
+    radial-gradient(120% 85% at 100% 0%, hsl(var(--av-energy) / 0.16), transparent 55%),
+    radial-gradient(95% 75% at 0% 100%, hsl(var(--primary) / 0.13), transparent 55%);
+}
+
+/* Halftone dots — a faint comic-print texture. */
+[data-skin='avengers'] .rn-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.6;
+  background-image: radial-gradient(hsl(var(--foreground) / 0.05) 1px, transparent 1.5px);
+  background-size: 13px 13px;
+}
+
+/* A slow energy pulse drifting across the canvas — cinematic, optional. */
+[data-skin='avengers'] .rn-canvas::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(55% 45% at 80% 15%, hsl(var(--av-energy) / 0.09), transparent 70%);
+  animation: rn-av-pulse 12s ease-in-out infinite alternate;
+}
+@keyframes rn-av-pulse {
+  from { transform: translate3d(2%, -1%, 0) scale(1); opacity: 0.7; }
+  to { transform: translate3d(-3%, 2%, 0) scale(1.08); opacity: 1; }
+}
+
+/* ── Typography: confident, slightly tightened display ──────────────────────── */
+[data-skin='avengers'] .font-display {
+  letter-spacing: -0.01em;
+}
+
+/* ── Buttons & primary actions catch the character's glow ───────────────────── */
+[data-skin='avengers'] button {
+  transition:
+    background-color var(--duration-fast, 160ms) ease,
+    color var(--duration-fast, 160ms) ease,
+    box-shadow var(--duration-base, 260ms) ease,
+    transform var(--duration-base, 260ms) cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-skin='avengers'] .bg-primary:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Cards get a fast energy sweep on hover (comic panel catching light). Excludes
+   positioned panels (.fixed/.absolute — dock, slash menu) so it never overrides
+   their own position/overflow. */
+[data-skin='avengers'] .rn-panel:not(.fixed):not(.absolute) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+[data-skin='avengers'] .rn-panel:not(.fixed):not(.absolute)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 36%, hsl(var(--accent) / 0.16) 50%, transparent 64%);
+  transform: translateX(-130%);
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-skin='avengers'] .rn-panel:not(.fixed):not(.absolute):hover::before {
+  transform: translateX(130%);
+}
+
+/* ── Selection & scrollbars in the character's colour ───────────────────────── */
+[data-skin='avengers'] ::selection {
+  background: hsl(var(--primary) / 0.28);
+}
+[data-skin='avengers'] * {
+  scrollbar-color: hsl(var(--primary) / 0.5) transparent;
+}
+[data-skin='avengers'] ::-webkit-scrollbar-thumb {
+  background: hsl(var(--primary) / 0.4);
+  border-radius: 9999px;
+}
+[data-skin='avengers'] ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.6);
+}
+
+/* ── Sidebar emblem (AvengersEmblemPanel) ───────────────────────────────────── */
+/* The character's insignia breathes with a soft energy glow. */
+[data-skin='avengers'] .rn-av-emblem {
+  animation: rn-av-emblem 4.5s ease-in-out infinite;
+}
+@keyframes rn-av-emblem {
+  0%, 100% { filter: drop-shadow(0 0 4px hsl(var(--primary) / 0.35)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 12px hsl(var(--primary) / 0.6)); transform: scale(1.04); }
+}
+/* The energy sweep behind the emblem card. */
+[data-skin='avengers'] .rn-av-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, hsl(var(--av-energy) / 0.16) 50%, transparent 62%);
+  transform: translateX(-130%);
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-skin='avengers'] .rn-av-card:hover::after {
+  transform: translateX(130%);
+}
+
+/* ── Respect reduced motion: drop decorative animation, keep the atmosphere ──── */
+@media (prefers-reduced-motion: reduce) {
+  [data-skin='avengers'] .rn-canvas::after,
+  [data-skin='avengers'] .rn-av-emblem,
+  [data-skin='avengers'] .rn-av-card::after,
+  [data-skin='avengers'] .rn-panel::before {
+    animation: none;
+    transition: none;
+  }
+}
+[data-reduced-motion='true'] [data-skin='avengers'] .rn-canvas::after,
+[data-reduced-motion='true'] [data-skin='avengers'] .rn-av-emblem {
+  animation: none;
+}
