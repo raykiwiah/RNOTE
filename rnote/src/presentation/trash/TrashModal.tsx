@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trash2, RotateCcw, FileText, X, Skull } from 'lucide-react';
+import { Trash2, RotateCcw, FileText, X, Skull, Wind } from 'lucide-react';
 import { useWorkspace } from '../state/workspace';
 import { usePreferences } from '../state/preferences';
 import { useLexicon } from '../theme/lexicon';
@@ -20,8 +20,10 @@ export function TrashModal({ open, onClose }: TrashModalProps): JSX.Element | nu
   const remove = useWorkspace((s) => s.remove);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const t = useLexicon();
-  const odysseus = usePreferences((s) => s.skin) === 'odysseus';
-  const HeaderIcon = odysseus ? Skull : Trash2;
+  const skin = usePreferences((s) => s.skin);
+  const odysseus = skin === 'odysseus';
+  const avengers = skin === 'avengers';
+  const HeaderIcon = odysseus ? Skull : avengers ? Wind : Trash2;
 
   useEffect(() => {
     if (open) {
@@ -81,6 +83,8 @@ export function TrashModal({ open, onClose }: TrashModalProps): JSX.Element | nu
             <div className="flex flex-col items-center gap-2 px-3 py-12 text-center">
               {odysseus ? (
                 <OdysseusMark size={44} className="text-primary" />
+              ) : avengers ? (
+                <Wind size={30} className="text-primary" />
               ) : (
                 <Trash2 size={26} className="text-subtle" />
               )}

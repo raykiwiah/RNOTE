@@ -24,10 +24,13 @@ import { useWorkspace } from '../state/workspace';
 import { useCalendar } from '../state/calendar';
 import { useConnectivity } from '../state/connectivity';
 import { useTour } from '../state/tour';
-import { usePreferences, type SkinName } from '../state/preferences';
+import { usePreferences } from '../state/preferences';
 import { useSound } from '../state/sound';
+import { themesForMode, themeRequiresVariant } from '../theme/skins';
+import { characterById, DEFAULT_CHARACTER_ID } from '../theme/avengersRoster';
 import { AiConnection } from './AiConnection';
 import { cn } from '../lib/cn';
+import { emit, OPEN_AVENGERS_ROSTER_EVENT } from '../lib/events';
 import { downloadFile, pickTextFile } from '../lib/files';
 import { markBackedUp } from '../lib/backupState';
 
@@ -49,6 +52,8 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
   const offline = conn.effective === 'offline';
   const skin = usePreferences((p) => p.skin);
   const setSkin = usePreferences((p) => p.setSkin);
+  const mode = usePreferences((p) => p.mode);
+  const skinVariant = usePreferences((p) => p.skinVariant);
   const soundEnabled = useSound((s) => s.enabled);
   const toggleSound = useSound((s) => s.toggle);
   const [calUrl, setCalUrl] = useState('');
@@ -126,32 +131,35 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
               language — never your notes or data.
             </p>
             <div className="mt-1 grid grid-cols-2 gap-2">
-              {(
-                [
-                  { id: 'default', title: 'Default', sub: 'The original RNOTE' },
-                  { id: 'odysseus', title: 'Odysseus', sub: "Homer's Odyssey — a cinematic voyage" },
-                ] as { id: SkinName; title: string; sub: string }[]
-              ).map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setSkin(opt.id)}
-                  aria-pressed={skin === opt.id}
-                  className={cn(
-                    'rounded-lg border p-3 text-left transition',
-                    skin === opt.id
-                      ? 'border-primary bg-primary/5 shadow-glow'
-                      : 'border-border hover:border-border-strong',
-                  )}
-                >
-                  <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                    {opt.id === 'odysseus' && <Compass size={14} className="text-primary" />}
-                    {opt.title}
-                  </div>
-                  <div className="mt-0.5 text-xs text-muted-foreground">{opt.sub}</div>
-                </button>
-              ))}
+              {themesForMode(mode).map((theme) => {
+                const Icon = theme.icon;
+                return (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    onClick={() => {
+                      setSkin(theme.id);
+                      if (themeRequiresVariant(theme.id)) emit(OPEN_AVENGERS_ROSTER_EVENT);
+                    }}
+                    aria-pressed={skin === theme.id}
+                    className={cn(
+                      'rounded-lg border p-3 text-left transition',
+                      skin === theme.id
+                        ? 'border-primary bg-primary/5 shadow-glow'
+                        : 'border-border hover:border-border-strong',
+                    )}
+                  >
+                    <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                      {Icon && <Icon size={14} className="text-primary" />}
+                      {theme.label}
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">{theme.tagline}</div>
+                  </button>
+                );
+              })}
             </div>
+
+            {skin === 'avengers' && <AvengersCharacterRow variant={skinVariant} />}
             <label className="mt-1 flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
               <span className="flex min-w-0 items-center gap-2">
                 <Volume2 size={15} className="shrink-0 text-muted-foreground" />
@@ -454,6 +462,33 @@ export function SettingsModal({ open, onClose }: SettingsModalProps): JSX.Elemen
         </div>
       </motion.div>
     </div>
+  );
+}
+
+/** The active Avengers character with a shortcut to reopen the picker. */
+function AvengersCharacterRow({ variant }: { variant: string | null }): JSX.Element {
+  const character = characterById(variant) ?? characterById(DEFAULT_CHARACTER_ID)!;
+  return (
+    <button
+      type="button"
+      onClick={() => emit(OPEN_AVENGERS_ROSTER_EVENT)}
+      className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5 text-left transition hover:bg-surface-hover"
+    >
+      <span className="flex min-w-0 items-center gap-2.5">
+        <span
+          className="h-8 w-8 shrink-0 rounded-lg shadow-sm"
+          style={{
+            background: `linear-gradient(135deg, hsl(${character.vars['--primary']}), hsl(${character.vars['--accent']}))`,
+          }}
+          aria-hidden
+        />
+        <span className="min-w-0">
+          <span className="block truncate text-sm font-medium text-foreground">{character.name}</span>
+          <span className="block truncate text-xs text-muted-foreground">{character.alias}</span>
+        </span>
+      </span>
+      <span className="shrink-0 text-xs font-medium text-primary">Change</span>
+    </button>
   );
 }
 

@@ -15,7 +15,7 @@
     -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' 'sha256-pPhhayTIII0G2ytrW6H6owwxZkErk5VGVgfZEej+kLA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; base-uri 'self'; object-src 'none'; form-action 'none'; upgrade-insecure-requests"
+      content="default-src 'self'; script-src 'self' 'sha256-LHupxc2VHQkiYtKoSD6AgpXWFS5yroA80lv/FMMGmjM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https:; manifest-src 'self'; worker-src 'self'; base-uri 'self'; object-src 'none'; form-action 'none'; upgrade-insecure-requests"
     />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="color-scheme" content="light dark" />
@@ -50,7 +50,9 @@
           if (mode === 'genz' || mode === 'millennial') {
             root.setAttribute('data-mode', mode);
           }
-          if (skin === 'odysseus' || skin === 'default') {
+          if (skin === 'odysseus' || skin === 'default' || skin === 'avengers') {
+            // Avengers is a Gen Z–only atmosphere; fall back if the mode differs.
+            if (skin === 'avengers' && mode !== 'genz') skin = 'default';
             root.setAttribute('data-skin', skin);
           }
           if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
