@@ -36,6 +36,7 @@ import { ConnectivityControls } from '../components/ConnectivityControls';
 import { AtmosphereControls } from '../components/AtmosphereControls';
 import { OdysseusVoyagePanel } from '../components/OdysseusVoyagePanel';
 import { AvengersEmblemPanel } from '../components/AvengersEmblemPanel';
+import { characterHomeIcon } from '../avengers/characterIcons';
 import { cn } from '../lib/cn';
 import { modLabel } from '../lib/platform';
 import { emit, OPEN_SETTINGS_EVENT } from '../lib/events';
@@ -58,6 +59,7 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
   const view = useWorkspace((s) => s.view);
   const mode = usePreferences((s) => s.mode);
   const skin = usePreferences((s) => s.skin);
+  const skinVariant = usePreferences((s) => s.skinVariant);
   const effective = useConnectivity((s) => s.effective);
   const autoOffline = useConnectivity((s) => s.autoOffline);
   const [trashOpen, setTrashOpen] = useState(false);
@@ -66,7 +68,8 @@ export function Sidebar({ onOpenSearch }: SidebarProps): JSX.Element {
   // Each skin re-symbolises the nav: Odysseus → mythology, Avengers → mission ops.
   const ody = skin === 'odysseus';
   const avg = skin === 'avengers';
-  const IHome = avg ? Building2 : ody ? Anchor : HomeIcon;
+  // Under Avengers, Home wears the chosen character's signature icon.
+  const IHome = avg ? (characterHomeIcon(skinVariant) ?? Building2) : ody ? Anchor : HomeIcon;
   const IToday = avg ? ClipboardList : ody ? Sun : CalendarDays;
   const ITime = avg ? Hourglass : ody ? Compass : History;
   const ISearch = avg ? Radar : ody ? Telescope : Search;

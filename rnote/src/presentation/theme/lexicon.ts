@@ -1,4 +1,5 @@
 import { usePreferences, type SkinName } from '../state/preferences';
+import { characterById, type CharacterVoice } from './avengersRoster';
 
 /**
  * Skin-aware microcopy. Under a skin the interface can speak a different
@@ -122,15 +123,37 @@ export function achievementTitle(id: string, fallback: string, skin: SkinName): 
 
 export type LexKey = keyof typeof LEXICON;
 
-export function lex(skin: SkinName, key: LexKey): string {
+/** Maps a lexicon key to the Avengers character's spoken override, if any. */
+function voiceFor(voice: CharacterVoice, key: LexKey): string | undefined {
+  if (key.startsWith('greeting.')) return voice.greeting;
+  if (key === 'home.capturePlaceholder') return voice.capture;
+  if (key === 'home.captureButton') return voice.logButton;
+  if (key === 'empty.noPages' || key === 'home.recentEmpty') return voice.empty;
+  return undefined;
+}
+
+/**
+ * Resolve a string for the active skin (and, under Avengers, the active
+ * character's voice). Resolution order: character voice → skin override →
+ * default.
+ */
+export function lex(skin: SkinName, key: LexKey, variant?: string | null): string {
+  if (skin === 'avengers') {
+    const voice = characterById(variant)?.voice;
+    if (voice) {
+      const spoken = voiceFor(voice, key);
+      if (spoken !== undefined) return spoken;
+    }
+  }
   // `satisfies` keeps each entry's literal shape, so widen to Entry before
   // indexing by an arbitrary skin (missing overrides fall back to default).
   const entry: Entry = LEXICON[key];
   return entry[skin] ?? entry.default;
 }
 
-/** Hook returning a translator bound to the active skin. */
+/** Hook returning a translator bound to the active skin (and character). */
 export function useLexicon(): (key: LexKey) => string {
   const skin = usePreferences((s) => s.skin);
-  return (key: LexKey) => lex(skin, key);
+  const variant = usePreferences((s) => s.skinVariant);
+  return (key: LexKey) => lex(skin, key, variant);
 }

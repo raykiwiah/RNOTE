@@ -15,6 +15,9 @@ import {
   DEFAULT_CHARACTER_ID,
   characterById,
 } from '@/presentation/theme/avengersRoster';
+import { characterHomeIcon } from '@/presentation/avengers/characterIcons';
+
+const SIGNATURES = ['repulsor', 'lightning', 'mystic', 'smash', 'symbiote', 'cosmic', 'web', 'kinetic'];
 
 const HSL_TRIPLE = /^\d{1,3} \d{1,3}% \d{1,3}%$/;
 const CORE_KEYS = ['--primary', '--primary-foreground', '--accent', '--accent-foreground', '--ring', '--av-energy'];
@@ -164,5 +167,47 @@ describe('lexicon · Avengers', () => {
     expect(achievementTitle('level-5', 'Rising Star', 'avengers')).toBe('Legend');
     expect(achievementTitle('unknown-id', 'Rising Star', 'avengers')).toBe('Rising Star');
     expect(achievementTitle('level-5', 'Rising Star', 'default')).toBe('Rising Star');
+  });
+});
+
+describe('per-character flourishes (emblem / voice / icon / signature)', () => {
+  it('every character has a valid signature effect and a full voice', () => {
+    for (const c of AVENGERS_CHARACTERS) {
+      expect(SIGNATURES, c.id).toContain(c.signature);
+      expect(c.voice?.greeting, c.id).toBeTruthy();
+      expect(c.voice?.capture, c.id).toBeTruthy();
+      expect(c.voice?.logButton, c.id).toBeTruthy();
+      expect(c.voice?.empty, c.id).toBeTruthy();
+    }
+  });
+
+  it('lex resolves the character voice first under Avengers', () => {
+    // greeting.* → the character's greeting
+    expect(lex('avengers', 'greeting.morning', 'hulk')).toBe('HULK READY.');
+    expect(lex('avengers', 'greeting.evening', 'thor')).toBe('Well met, warrior.');
+    // capture placeholder + button
+    expect(lex('avengers', 'home.capturePlaceholder', 'venom')).toBe('Feed us a thought…');
+    expect(lex('avengers', 'home.captureButton', 'venom')).toBe('Devour');
+    // empty states
+    expect(lex('avengers', 'empty.noPages', 'thanos')).toContain('Balance');
+  });
+
+  it('falls back to the base Avengers copy for keys the voice does not touch', () => {
+    // nav.home has no voice override → base Avengers 'The Tower' for any character
+    expect(lex('avengers', 'nav.home', 'hulk')).toBe('The Tower');
+    expect(lex('avengers', 'nav.trash', 'loki')).toBe('Snapped');
+  });
+
+  it('ignores voice when the skin is not Avengers', () => {
+    expect(lex('odysseus', 'greeting.morning', 'hulk')).toBe('Fair winds');
+    expect(lex('default', 'home.captureButton', 'venom')).toBe('Capture');
+  });
+
+  it('maps every character to a signature home icon', () => {
+    for (const c of AVENGERS_CHARACTERS) {
+      expect(characterHomeIcon(c.id), c.id).toBeTruthy();
+    }
+    expect(characterHomeIcon('not-a-hero')).toBeUndefined();
+    expect(characterHomeIcon(null)).toBeUndefined();
   });
 });

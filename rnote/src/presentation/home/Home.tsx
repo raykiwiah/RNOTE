@@ -76,7 +76,9 @@ export function Home(): JSX.Element {
           <h1 className="mt-1 flex items-center gap-2 font-display text-3xl font-bold tracking-tight text-foreground">
             <span className={mode === 'genz' ? 'rn-gradient-text' : undefined}>
               {t(greetingKey(now.getHours()))}
-              {userName && (
+              {/* Avengers greetings are complete character lines, so they stand
+                  alone; other skins personalise with the user's name. */}
+              {userName && skin !== 'avengers' && (
                 <span className={mode === 'genz' ? undefined : 'text-primary'}>, {userName}</span>
               )}
             </span>
