@@ -163,13 +163,23 @@
 
 /* ══ Signature ambient effects (PantheonEffects) ════════════════════════════════ */
 
-/* Zeus / Thor — thunder: a sky flash and a bolt. */
+/* Zeus / Thor — thunder: a constant charge in the air, with periodic strikes. */
+.rn-pan-charge {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 55% at 50% -8%, hsl(var(--av-energy) / 0.13), transparent 55%);
+  animation: rn-pan-charge 2.6s ease-in-out infinite;
+}
+@keyframes rn-pan-charge {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.75; }
+}
 .rn-pan-flash {
   position: absolute;
   inset: 0;
   background: radial-gradient(120% 90% at 50% -12%, hsl(var(--av-energy) / 0.45), transparent 60%);
   opacity: 0;
-  animation: rn-pan-flash 8s ease-out infinite;
+  animation: rn-pan-flash 5.5s ease-out infinite;
 }
 .rn-pan-bolt {
   position: absolute;
@@ -179,7 +189,7 @@
   height: 44%;
   opacity: 0;
   filter: drop-shadow(0 0 7px hsl(var(--av-energy)));
-  animation: rn-pan-boltfade 8s ease-out infinite;
+  animation: rn-pan-boltfade 5.5s ease-out infinite;
 }
 @keyframes rn-pan-flash {
   0%, 9%, 100% { opacity: 0; }
@@ -231,29 +241,45 @@
   100% { transform: translateY(-70vh) scale(1); opacity: 0; }
 }
 
-/* Apollo / Nike — radiance: golden rays pulsing from above + rising motes. */
+/* Apollo / Nike — radiance: golden rays sweeping from above + rising motes. */
 .rn-pan-radiance {
   position: absolute;
-  top: -30%;
+  top: -35%;
   left: 50%;
-  width: 140%;
-  height: 100%;
+  width: 150%;
+  height: 110%;
   transform: translateX(-50%);
   background: conic-gradient(
     from 180deg at 50% 0%,
-    transparent 0deg,
-    hsl(var(--av-energy) / 0.1) 8deg,
-    transparent 16deg,
-    transparent 30deg,
-    hsl(var(--av-energy) / 0.08) 38deg,
-    transparent 46deg
+    transparent 0deg, hsl(var(--av-energy) / 0.2) 7deg, transparent 15deg,
+    transparent 26deg, hsl(var(--av-energy) / 0.14) 33deg, transparent 41deg,
+    transparent 54deg, hsl(var(--av-energy) / 0.18) 61deg, transparent 69deg
   );
-  opacity: 0;
-  animation: rn-pan-radiance 7s ease-in-out infinite;
+  animation: rn-pan-radiance 6s ease-in-out infinite;
 }
 @keyframes rn-pan-radiance {
-  0%, 100% { opacity: 0.3; transform: translateX(-50%) rotate(-3deg); }
-  50% { opacity: 0.8; transform: translateX(-50%) rotate(3deg); }
+  0%, 100% { opacity: 0.5; transform: translateX(-50%) rotate(-5deg); }
+  50% { opacity: 1; transform: translateX(-50%) rotate(5deg); }
+}
+.rn-pan-motes span {
+  position: absolute;
+  top: 100%;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: hsl(var(--av-energy));
+  box-shadow: 0 0 7px 1px hsl(var(--av-energy) / 0.7);
+  opacity: 0;
+  animation: rn-pan-mote 7s linear infinite;
+}
+.rn-pan-motes span:nth-child(1) { left: 22%; animation-delay: 0s; }
+.rn-pan-motes span:nth-child(2) { left: 44%; animation-delay: 2.4s; }
+.rn-pan-motes span:nth-child(3) { left: 63%; animation-delay: 4.2s; }
+.rn-pan-motes span:nth-child(4) { left: 80%; animation-delay: 5.6s; }
+@keyframes rn-pan-mote {
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  12% { opacity: 0.9; }
+  100% { transform: translateY(-88vh) scale(1); opacity: 0; }
 }
 
 /* Artemis / Atalanta / Freya — moonlight: a silver glow + drifting stars. */
@@ -310,29 +336,35 @@
   100% { transform: translateY(105vh) rotate(320deg); opacity: 0; }
 }
 
-/* Athena / Perseus / Odin / Brynhildr — wings: a soaring silhouette gliding by. */
+/* Athena / Perseus / Odin / Brynhildr — wings: soaring silhouettes, always one or
+   two crossing (staggered), with continuously flapping wings. */
 .rn-pan-wings {
   position: absolute;
-  top: 14%;
-  left: -12%;
-  width: 46px;
+  left: -14%;
+  width: 44px;
   height: 26px;
-  color: hsl(var(--foreground) / 0.5);
+  color: hsl(var(--foreground) / 0.55);
   opacity: 0;
-  animation: rn-pan-soar 13s linear infinite;
+  animation: rn-pan-soar 11s linear infinite;
 }
-.rn-pan-wings.rn-pan-wings-2 {
-  top: 30%;
-  width: 32px;
-  animation-duration: 17s;
-  animation-delay: 6s;
+.rn-pan-wings-0 { top: 12%; animation-delay: 0s; }
+.rn-pan-wings-1 { top: 27%; width: 30px; animation-delay: 3.7s; }
+.rn-pan-wings-2 { top: 18%; width: 37px; animation-delay: 7.3s; }
+.rn-pan-flap {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rn-pan-flap 0.85s ease-in-out infinite;
 }
 @keyframes rn-pan-soar {
-  0% { transform: translate(0, 0) scale(0.8); opacity: 0; }
-  12% { opacity: 0.8; }
-  50% { transform: translate(60vw, -14px) scale(1); }
-  88% { opacity: 0.7; }
-  100% { transform: translate(120vw, 6px) scale(1.05); opacity: 0; }
+  0% { transform: translate(0, 0) scale(0.85); opacity: 0; }
+  10% { opacity: 0.8; }
+  50% { transform: translate(60vw, -16px) scale(1); }
+  88% { opacity: 0.72; }
+  100% { transform: translate(120vw, 8px) scale(1.05); opacity: 0; }
+}
+@keyframes rn-pan-flap {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(0.5); }
 }
 
 /* Heracles / Minotaur / Kronos — quake: rising dust + a periodic ground pulse. */
@@ -350,21 +382,24 @@
 }
 .rn-pan-dust span {
   position: absolute;
-  bottom: 0;
+  bottom: 4%;
   width: 3px;
   height: 3px;
   border-radius: 9999px;
   background: hsl(var(--primary) / 0.5);
   opacity: 0;
-  animation: rn-pan-dust 5.5s ease-out infinite;
+  animation: rn-pan-dust 4.5s linear infinite;
 }
-.rn-pan-dust span:nth-child(1) { left: 24%; animation-delay: 0.2s; }
-.rn-pan-dust span:nth-child(2) { left: 52%; animation-delay: 0.4s; }
-.rn-pan-dust span:nth-child(3) { left: 76%; animation-delay: 0.1s; }
+.rn-pan-dust span:nth-child(1) { left: 16%; animation-delay: 0s; }
+.rn-pan-dust span:nth-child(2) { left: 34%; animation-delay: 1.5s; }
+.rn-pan-dust span:nth-child(3) { left: 50%; animation-delay: 0.7s; }
+.rn-pan-dust span:nth-child(4) { left: 66%; animation-delay: 2.8s; }
+.rn-pan-dust span:nth-child(5) { left: 82%; animation-delay: 3.6s; }
+.rn-pan-dust span:nth-child(6) { left: 92%; animation-delay: 2s; }
 @keyframes rn-pan-dust {
-  0%, 86% { transform: translateY(0); opacity: 0; }
-  90% { opacity: 0.9; }
-  100% { transform: translateY(-40px); opacity: 0; }
+  0% { transform: translateY(0) scale(0.5); opacity: 0; }
+  15% { opacity: 0.85; }
+  100% { transform: translateY(-52px) scale(1); opacity: 0; }
 }
 
 /* Medusa — serpents writhing at the edges. */
