@@ -40,10 +40,11 @@ function Repulsor(): JSX.Element {
   );
 }
 
-/** Thor / Magneto — an occasional sky flash and a jagged bolt. */
+/** Thor / Magneto — a constant charge in the air with periodic strikes. */
 function Lightning(): JSX.Element {
   return (
     <>
+      <div className="rn-fx-charge" />
       <div className="rn-fx-flash" />
       <svg className="rn-fx-bolt" viewBox="0 0 100 200" preserveAspectRatio="none">
         <path d="M58 0 30 90 52 90 24 200 82 78 56 78 78 0Z" fill="hsl(var(--av-energy))" />
@@ -104,20 +105,27 @@ function Cosmic(): JSX.Element {
   );
 }
 
-/** Spider-Man — a shimmering web strung across a corner. */
+/** Spider-Man — a shimmering corner web + a spider dropping and climbing. */
 function Web(): JSX.Element {
   return (
-    <svg className="rn-fx-web" viewBox="0 0 120 120">
-      <g fill="none" stroke="hsl(var(--av-energy))" strokeWidth="0.9">
-        <path d="M0 0 L120 45M0 0 L45 120M0 0 L90 90M0 0 L20 120M0 0 L120 20" />
-        <path d="M0 0 Q30 12 24 40" />
-        <path d="M0 0 Q12 30 40 24" />
-        <path d="M0 0 Q52 26 46 66" />
-        <path d="M0 0 Q26 52 66 46" />
-        <path d="M0 0 Q76 40 70 92" />
-        <path d="M0 0 Q40 76 92 70" />
-      </g>
-    </svg>
+    <>
+      <svg className="rn-fx-web" viewBox="0 0 120 120">
+        <g fill="none" stroke="hsl(var(--av-energy))" strokeWidth="0.9">
+          <path d="M0 0 L120 45M0 0 L45 120M0 0 L90 90M0 0 L20 120M0 0 L120 20" />
+          <path d="M0 0 Q30 12 24 40" />
+          <path d="M0 0 Q12 30 40 24" />
+          <path d="M0 0 Q52 26 46 66" />
+          <path d="M0 0 Q26 52 66 46" />
+          <path d="M0 0 Q76 40 70 92" />
+          <path d="M0 0 Q40 76 92 70" />
+        </g>
+      </svg>
+      <div className="rn-fx-thread" />
+      <svg className="rn-fx-spider" width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" strokeWidth="1">
+        <ellipse cx="7" cy="6" rx="2.2" ry="3" fill="currentColor" stroke="none" />
+        <path d="M5 4 1 2M5 6 0 6M5 8 1 10M9 4 13 2M9 6 14 6M9 8 13 10" strokeLinecap="round" />
+      </svg>
+    </>
   );
 }
 

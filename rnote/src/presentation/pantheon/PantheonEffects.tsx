@@ -21,7 +21,7 @@ export function PantheonEffects(): JSX.Element | null {
       {character.signature === 'thunder' && <Thunder />}
       {character.signature === 'tide' && <Tide />}
       {character.signature === 'embers' && <Embers />}
-      {character.signature === 'radiance' && <div className="rn-pan-radiance" />}
+      {character.signature === 'radiance' && <Radiance />}
       {character.signature === 'moonlight' && <Moonlight />}
       {character.signature === 'petals' && <Petals />}
       {character.signature === 'wings' && <Wings />}
@@ -34,10 +34,25 @@ export function PantheonEffects(): JSX.Element | null {
 function Thunder(): JSX.Element {
   return (
     <>
+      <div className="rn-pan-charge" />
       <div className="rn-pan-flash" />
       <svg className="rn-pan-bolt" viewBox="0 0 100 200" preserveAspectRatio="none">
         <path d="M58 0 30 90 52 90 24 200 82 78 56 78 78 0Z" fill="hsl(var(--av-energy))" />
       </svg>
+    </>
+  );
+}
+
+function Radiance(): JSX.Element {
+  return (
+    <>
+      <div className="rn-pan-radiance" />
+      <div className="rn-pan-motes">
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
     </>
   );
 }
@@ -96,12 +111,19 @@ function Petals(): JSX.Element {
 function Wings(): JSX.Element {
   return (
     <>
-      <svg className="rn-pan-wings" viewBox="0 0 46 26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <path d="M2 15 Q12 3 23 15 Q34 3 44 15" />
-      </svg>
-      <svg className="rn-pan-wings rn-pan-wings-2" viewBox="0 0 46 26" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <path d="M2 15 Q12 3 23 15 Q34 3 44 15" />
-      </svg>
+      {[0, 1, 2].map((i) => (
+        <svg
+          key={i}
+          className={`rn-pan-wings rn-pan-wings-${i}`}
+          viewBox="0 0 46 26"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+        >
+          <path className="rn-pan-flap" d="M2 15 Q12 3 23 15 Q34 3 44 15" />
+        </svg>
+      ))}
     </>
   );
 }
@@ -111,6 +133,9 @@ function Quake(): JSX.Element {
     <>
       <div className="rn-pan-quake" />
       <div className="rn-pan-dust">
+        <span />
+        <span />
+        <span />
         <span />
         <span />
         <span />
